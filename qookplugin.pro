@@ -1,5 +1,5 @@
 isEmpty(IDE_SOURCE_TREE): IDE_SOURCE_TREE = "/home/tfannes/programming/qt-creator"
-isEmpty(IDE_BUILD_TREE): IDE_BUILD_TREE = "/home/tfannes/programming/build-qtcreator-debug"
+isEmpty(IDE_BUILD_TREE): IDE_BUILD_TREE = "/home/tfannes/programming/build-qt-creator-debug"
 QTC_PLUGIN_NAME = QookPlugin
 QTC_PLUGIN_DEPENDS = coreplugin texteditor projectexplorer
 include($$IDE_SOURCE_TREE/src/qtcreatorplugin.pri)
@@ -19,10 +19,13 @@ SOURCES += \
     src/qook/chai/editor/KeyWord.cpp \
     src/qook/chai/editor/Indenter.cpp \
     src/qook/chai/editor/Editor.cpp \
-    src/qook/cook/ToolSelection.cpp \
-    src/qook/cook/ToolSettings.cpp \
-    src/qook/cook/Tool.cpp \
-    src/qook/cook/ToolManager.cpp
+    src/qook/toolset/SettingsWidget.cpp \
+    src/qook/toolset/Settings.cpp \
+    src/qook/toolset/Tool.cpp \
+    src/qook/toolset/Manager.cpp \
+    src/qook/toolset/ConfigItemModel.cpp \
+    src/qook/toolset/ConfigItem.cpp
+
 
 HEADERS += \
     src/qook/QookProject.hpp \
@@ -36,13 +39,15 @@ HEADERS += \
     src/qook/chai/editor/KeyWord.hpp \
     src/qook/chai/editor/Indenter.hpp \
     src/qook/chai/editor/Editor.hpp \
-    src/qook/cook/ToolSelection.hpp \
-    src/qook/cook/ToolSettings.hpp \
-    src/qook/cook/Tool.hpp \
-    src/qook/cook/ToolManager.hpp
+    src/qook/toolset/SettingsWidget.hpp \
+    src/qook/toolset/Settings.hpp \
+    src/qook/toolset/Tool.hpp \
+    src/qook/toolset/Manager.hpp \
+    src/qook/toolset/ConfigItemModel.hpp \
+    src/qook/toolset/ConfigItem.hpp
 
 OTHER_FILES += \
     QookPlugin.json.in
 
 FORMS += \
-    src/qook/cook/ToolSelection.ui
+    src/qook/toolset/SettingsWidget.ui

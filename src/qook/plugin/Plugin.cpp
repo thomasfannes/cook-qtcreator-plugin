@@ -1,6 +1,7 @@
 #include "qook/plugin/Plugin.hpp"
 #include "qook/chai/editor/Editor.hpp"
-#include "qook/cook/ToolSettings.hpp"
+#include "qook/toolset/Settings.hpp"
+#include "qook/toolset/Manager.hpp"
 #include "qook/QookProject.hpp"
 #include "qook/ProjectWizard.hpp"
 #include "qook/Constants.hpp"
@@ -48,8 +49,10 @@ bool Plugin::initialize(const QStringList &arguments, QString *errorString)
     ProjectExplorer::ProjectManager::registerProjectType<QookProject>(qook::constants::CHAI_MIME_TYPE);
 //    Core::IWizardFactory::registerFactoryCreator([]() { return QList<Core::IWizardFactory *>() << new ProjectWizardFactory; });
 
+    qook::toolset::Manager::create_instance(this);
+
     addAutoReleasedObject(new chai::editor::EditorFactory);
-    addAutoReleasedObject(new cook::ToolSettings);
+    addAutoReleasedObject(new toolset::Settings);
 
 
     /*auto action = new QAction(tr("QookPlugin Action"), this);
@@ -68,7 +71,7 @@ bool Plugin::initialize(const QStringList &arguments, QString *errorString)
 
 void Plugin::extensionsInitialized()
 {
-
+    qook::toolset::Manager::instance()->restore();
 }
 
 void Plugin::triggerAction()

@@ -1,5 +1,6 @@
-#include "qook/cook/ToolSettings.hpp"
-#include "qook/cook/ToolSelection.hpp"
+#include "qook/toolset/Settings.hpp"
+#include "qook/toolset/SettingsWidget.hpp"
+#include "qook/toolset/ConfigItemModel.hpp"
 #include "qook/Constants.hpp"
 
 #include <projectexplorer/projectexplorerconstants.h>
@@ -8,19 +9,9 @@
 #include <utils/fileutils.h>
 #include <coreplugin/icore.h>
 
-namespace qook { namespace cook {
+namespace qook { namespace toolset {
 
-namespace  {
-
-Utils::FileName user_settings_file()
-{
-    QFileInfo settingsLocation(Core::ICore::settings()->fileName());
-    return Utils::FileName::fromString(settingsLocation.absolutePath() + "/qtcreator/cooktool.xml");
-}
-
-}
-
-ToolSettings::ToolSettings()
+Settings::Settings()
 {
     setId(constants::QOOK_TOOLSETTINGS_ID);
     setDisplayName("Cook");
@@ -29,25 +20,25 @@ ToolSettings::ToolSettings()
     setCategoryIcon(Utils::Icon(ProjectExplorer::Constants::PROJECTEXPLORER_SETTINGS_CATEGORY_ICON));
 }
 
-QWidget * ToolSettings::widget()
+QWidget * Settings::widget()
 {
     if (!widget_)
-        widget_ = new ToolSelection;
+        widget_ = new SettingsWidget;
 
     return widget_;
 }
 
-void ToolSettings::apply()
+void Settings::apply()
 {
     // store the settings
-//    Utils::PersistentSettingsWriter * w = new Utils::PersistentSettingsWriter()
-
+    widget_->model()->apply();
 }
 
-void ToolSettings::finish()
+void Settings::finish()
 {
     delete widget_;
     widget_= 0;
 }
 
 } }
+
