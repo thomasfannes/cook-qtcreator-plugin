@@ -31,8 +31,10 @@ public:
 
     bool register_tool(Tool * tool);
     void deregister_tool(const Core::Id &id);
-    const QList<Tool *> & registered_tools() const { return registered_tools_; }
-    Tool * find_registered_tool(const Core::Id & id) const;
+    const Tool *update_or_register_tool(const Tool & update);
+
+    QList<const Tool *> registered_tools() const;
+    const Tool * find_registered_tool(const Core::Id & id) const;
 
     void set_default_tool(const Core::Id &id);
     Core::Id default_tool_id() const { return default_tool_id_;  }
@@ -47,6 +49,7 @@ signals:
     void default_tool_changed();
     void tool_added(const Core::Id id);
     void tool_removed(const Core::Id id);
+    void tool_updated(const Core::Id id);
     void tools_changed();
     void tools_loaded();
 

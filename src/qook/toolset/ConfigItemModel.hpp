@@ -14,9 +14,9 @@ class Manager;
 class ConfigItemModel : public Utils::TreeModel<Utils::TreeItem, Utils::TreeItem, ConfigItem>
 {
 public:
-    explicit ConfigItemModel(QObject * parent, Manager * mgr);
+    explicit ConfigItemModel(QObject * parent);
 
-    ConfigItem * add_tool(Tool * tool);
+    ConfigItem * add_tool(const Tool *tool);
     ConfigItem * add_tool(const QString & displayName, const QFileInfo & executable);
 
     void update_tool(const Core::Id &id, const QString &display_name, const QFileInfo &executable);
@@ -35,7 +35,6 @@ public:
 private:
     void update_(const Core::Id & id);
 
-    Manager * mgr_;
     Core::Id default_item_id_;
     QList<Core::Id> to_remove_;
 };

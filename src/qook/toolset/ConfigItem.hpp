@@ -19,8 +19,8 @@ public:
 
     Tool & tool()               { return tool_; }
     const Tool & tool() const   { return tool_; }
-    bool has_changed() const    { return changed_; }
-    void reevaluate_changed(const Manager & tool_manager);
+    bool has_changed() const;
+
     bool is_default() const;
 
     void update_original_tool(const Tool * original_tool) { original_tool_ = original_tool; }
@@ -30,7 +30,6 @@ private:
     ConfigItemModel * model() const;
     Tool tool_;
     const Tool * original_tool_;
-    bool changed_;
 };
 
 } }

@@ -39,9 +39,8 @@ Manager::Manager(QObject *parent)
 
     connect(this, &Manager::tool_added, this, &Manager::tools_changed);
     connect(this, &Manager::tool_removed, this, &Manager::tools_changed);
+    connect(this, &Manager::tool_updated, this, &Manager::tools_changed);
     connect(Core::ICore::instance(), &Core::ICore::saveSettingsRequested, this, &Manager::save_tools_);
-
-
 }
 
 Manager::~Manager()
@@ -64,7 +63,14 @@ Manager * Manager::instance()
     return instance_;
 }
 
+QList<const Tool *> Manager::registered_tools() const
+{
+    QList<const Tool *> lst;
+    for(Tool * t : registered_tools_)
+        lst.append(t);
 
+    return lst;
+}
 
 bool Manager::register_tool(Tool * tool)
 {
@@ -81,7 +87,7 @@ bool Manager::register_tool(Tool * tool)
             return false;
 
     registered_tools_.append(tool);
-    if (default_tool_id_.isValid())
+    if (!default_tool_id_.isValid())
     {
         default_tool_id_ = tool->id();
         emit default_tool_changed();
@@ -91,7 +97,30 @@ bool Manager::register_tool(Tool * tool)
     return true;
 }
 
-Tool * Manager::find_registered_tool(const Core::Id & id) const
+const Tool * Manager::update_or_register_tool(const Tool & update)
+{
+    Tool * tool = nullptr;
+
+    auto it = std::find_if(registered_tools_.begin(), registered_tools_.end(), [&](Tool * t) {return t->id() == update.id();});
+    if (it == registered_tools_.end())
+    {
+        // add a new tool
+        tool = new Tool(update);
+        QTC_ASSERT(register_tool(tool), return nullptr);
+    }
+    else
+    {
+        tool = *it;
+        tool->set_display_name(update.display_name());
+        tool->set_exec_file(update.exec_file());
+    }
+
+    emit tool_updated(tool->id());
+
+    return tool;
+}
+
+const Tool *Manager::find_registered_tool(const Core::Id & id) const
 {
     auto it = std::find_if(registered_tools_.begin(), registered_tools_.end(), [&](Tool * t) {return t->id() == id;});
     return it != registered_tools_.end() ? *it : nullptr;
@@ -170,7 +199,7 @@ void Manager::restore()
     {
         Tool * tool = auto_detected.takeLast();
 
-        // as an autodetected in the to_register list?
+        // is an autodetected in the to_register list?
         if(Utils::anyOf(to_register, [=](Tool * t) { return t->is_auto_detected() && t->exec_file() == tool->exec_file(); } ))
         {
             delete tool;

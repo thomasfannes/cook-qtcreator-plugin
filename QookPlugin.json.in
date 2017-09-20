@@ -17,7 +17,7 @@
         \"    <comment>Chai script file</comment>\",
         \"    <glob pattern=\'*.chai\'/>\",
         \"  </mime-type>\",
-        \"  <mime-type type=\'text/x-cook\'>\",
+        \"  <mime-type type=\'text/x-cook-project\'>\",
         \"    <sub-class-of type=\'text/x-chai\'/>\",
         \"    <comment>Cook recipe file</comment>\",
         \"    <glob pattern=\'recipes.chai\'/>\",

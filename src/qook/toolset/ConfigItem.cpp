@@ -9,15 +9,13 @@
 namespace qook { namespace toolset {
 
 ConfigItem::ConfigItem()
-    : original_tool_(nullptr),
-      changed_(true)
+    : original_tool_(0)
 {
 }
 
 ConfigItem::ConfigItem(const Tool * tool)
     : tool_(tool ? *tool : Tool()),
-      original_tool_(tool),
-      changed_(false)
+      original_tool_(tool)
 {
 }
 
@@ -47,7 +45,7 @@ QVariant ConfigItem::data(int column, int role) const
     case Qt::FontRole:
     {
         QFont font;
-        font.setBold(changed_);
+        font.setBold(has_changed());
         font.setItalic(is_default());
         return font;
     }
@@ -75,12 +73,12 @@ bool ConfigItem::is_default() const
     return tool_.id() == model()->default_item_id();
 }
 
-void ConfigItem::reevaluate_changed(const Manager & tool_manager)
+bool ConfigItem::has_changed() const
 {
-    bool default_for_manager = (original_tool_ && original_tool_->id() == tool_manager.default_tool_id());
-    changed_ = (original_tool_ == 0 || tool_.display_name() != original_tool_->display_name() || tool_.exec_file() != original_tool_->exec_file() || is_default() != default_for_manager);
-    if (changed_)
-        update();
+    return original_tool_ == 0
+                    || tool_.display_name() != original_tool_->display_name()
+                    || tool_.exec_file() != original_tool_->exec_file()
+                    || is_default() != original_tool_->is_default();
 }
 
 } }

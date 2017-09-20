@@ -7,26 +7,27 @@
 
 namespace qook { namespace toolset {
 
-ConfigItemModel::ConfigItemModel(QObject *parent, Manager * mgr)
-    : Utils::TreeModel<Utils::TreeItem, Utils::TreeItem, ConfigItem>(parent),
-      mgr_(mgr),
-      default_item_id_(mgr->default_tool_id())
+ConfigItemModel::ConfigItemModel(QObject *parent)
+    : Utils::TreeModel<Utils::TreeItem, Utils::TreeItem, ConfigItem>(parent)
 {
+    Manager * mgr = Manager::instance();
+    default_item_id_ = mgr->default_tool_id();
+
     setHeader({ tr("Name"), tr("Location"), tr("Version") });
     rootItem()->appendChild(new Utils::StaticTreeItem(tr("Auto-detected")));
     rootItem()->appendChild(new Utils::StaticTreeItem(tr("Manual")));
 
     // add the existing item
-    for(Tool * tool: mgr->registered_tools())
+    for(const Tool * tool: mgr->registered_tools())
         add_tool(tool);
 
     // connect the signals
     connect(mgr, &Manager::tool_removed, this, &ConfigItemModel::remove_tool);
-    connect(mgr, &Manager::tool_added, this, [this](const Core::Id & id) { add_tool(mgr_->find_registered_tool(id)); });
-    connect(mgr, &Manager::default_tool_changed, this, [this]() { set_default_item_id(mgr_->default_tool_id()); });
+    connect(mgr, &Manager::tool_added, this, [this, mgr](const Core::Id & id) { add_tool(mgr->find_registered_tool(id)); });
+    connect(mgr, &Manager::default_tool_changed, this, [this, mgr]() { set_default_item_id(mgr->default_tool_id()); });
 }
 
-ConfigItem * ConfigItemModel::add_tool(Tool * tool)
+ConfigItem * ConfigItemModel::add_tool(const Tool * tool)
 {
     QTC_ASSERT(tool, return nullptr);
 
@@ -59,7 +60,9 @@ void ConfigItemModel::update_tool(const Core::Id &id, const QString &display_nam
 
     item->tool().set_display_name(display_name);
     item->tool().set_exec_file(executable);
-    item->reevaluate_changed(*mgr_);
+
+    if(item->has_changed())
+        item->update();
 }
 
 void ConfigItemModel::remove_tool(const Core::Id & id)
@@ -87,26 +90,19 @@ ConfigItem * ConfigItemModel::find_item(const QModelIndex & index) const
 
 void ConfigItemModel::apply()
 {
+    Manager * mgr = Manager::instance();
+
     QList<ConfigItem*> to_update;
 
     // apply all the changes to the manager
-    forItemsAtLevel<2>( [this, &to_update](ConfigItem * item)
+    forItemsAtLevel<2>( [this, mgr, &to_update](ConfigItem * item)
     {
-        if (item->has_changed())
+        if(item->has_changed())
         {
             // new item?
-            Tool * tool = mgr_->find_registered_tool(item->tool().id());
-            if (!tool)
-            {
-                tool = new Tool(item->tool());
-                mgr_->register_tool(tool);
-                item->update_original_tool(tool);
-            }
-            else
-            {
-                tool->set_display_name(item->tool().display_name());
-                tool->set_exec_file(item->tool().exec_file());
-            }
+            const Tool * tool = mgr->update_or_register_tool(item->tool());
+            QTC_ASSERT(tool, return);
+            item->update_original_tool(tool);
 
             to_update << item;
         }
@@ -114,18 +110,17 @@ void ConfigItemModel::apply()
 
     // remove the tools that need to be removed
     for(const Core::Id & id : to_remove_)
-        mgr_->deregister_tool(id);
+        mgr->deregister_tool(id);
     to_remove_.clear();
 
     // update the default item (if changed)
-    if(default_item_id() != mgr_->default_tool_id())
-        mgr_->set_default_tool(default_item_id());
+    if(default_item_id() != mgr->default_tool_id())
+        mgr->set_default_tool(default_item_id());
 
+
+    // update the items
     for(ConfigItem * item : to_update)
-    {
-        item->reevaluate_changed(*mgr_);
         item->update();
-    }
 }
 
 Utils::TreeItem * ConfigItemModel::auto_group_item() const
@@ -146,8 +141,8 @@ Core::Id ConfigItemModel::default_item_id() const
 void ConfigItemModel::update_(const Core::Id &id)
 {
     ConfigItem * item = find_item(id);
-    if (item)
-        item->reevaluate_changed(*mgr_);
+    if (item && item->has_changed())
+        item->update();
 }
 
 void ConfigItemModel::set_default_item_id(const Core::Id &id)

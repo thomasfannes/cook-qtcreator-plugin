@@ -24,7 +24,7 @@ SettingsWidget::SettingsWidget(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    model_ = new ConfigItemModel(this, Manager::instance());
+    model_ = new ConfigItemModel(this);
     ui->overview->setModel(model_);
 
     ui->overview->header()->setSectionResizeMode(0, QHeaderView::Stretch);

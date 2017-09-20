@@ -1,6 +1,8 @@
 #include "qook/toolset/Tool.hpp"
+#include "qook/toolset/Manager.hpp"
 #include <utils/environment.h>
 #include <QRegularExpression>
+#include <QDebug>
 #include <QUuid>
 
 namespace qook { namespace toolset {
@@ -46,6 +48,11 @@ Tool * Tool::generate_from_map(const QVariantMap & map)
     return tool;
 }
 
+bool Tool::is_default() const
+{
+    return id_.isValid() && Manager::instance()->default_tool_id() == id_;
+}
+
 Core::Id Tool::generate_id()
 {
     return Core::Id::fromString(QUuid::createUuid().toString());
@@ -56,7 +63,7 @@ std::pair<Tool::Version, bool> Tool::get_version_(const QFileInfo & exec)
     Utils::SynchronousProcessResponse respons = run_(exec, {"-h"});
     if (respons.result == Utils::SynchronousProcessResponse::Finished)
     {
-        QRegularExpression re("cook version: (\\d+).(\\d+).(\\d+)");
+        QRegularExpression re("cook version (\\d+).(\\d+).(\\d+)");
         QRegularExpressionMatch match = re.match(respons.stdOut());
 
         if(match.hasMatch())

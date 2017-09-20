@@ -2,7 +2,10 @@
 #include "qook/chai/editor/Editor.hpp"
 #include "qook/toolset/Settings.hpp"
 #include "qook/toolset/Manager.hpp"
-#include "qook/QookProject.hpp"
+#include "qook/toolset/KitInformation.hpp"
+#include "qook/project/Project.hpp"
+#include "qook/project/BuildConfigurationFactory.hpp"
+
 #include "qook/ProjectWizard.hpp"
 #include "qook/Constants.hpp"
 
@@ -16,6 +19,7 @@
 #include <projectexplorer/projectmanager.h>
 #include <projectexplorer/projectmanager.h>
 #include <coreplugin/iwizardfactory.h>
+#include <coreplugin/fileiconprovider.h>
 
 #include <QAction>
 #include <QMessageBox>
@@ -46,13 +50,17 @@ bool Plugin::initialize(const QStringList &arguments, QString *errorString)
     Q_UNUSED(arguments)
     Q_UNUSED(errorString)
 
-    ProjectExplorer::ProjectManager::registerProjectType<QookProject>(qook::constants::CHAI_MIME_TYPE);
+    Core::FileIconProvider::registerIconOverlayForSuffix(constants::FILE_OVERLAY_CHAI, "chai");
+
+    ProjectExplorer::ProjectManager::registerProjectType<project::Project>(qook::constants::QOOK_MIME_TYPE);
 //    Core::IWizardFactory::registerFactoryCreator([]() { return QList<Core::IWizardFactory *>() << new ProjectWizardFactory; });
 
     qook::toolset::Manager::create_instance(this);
+    ProjectExplorer::KitManager::registerKitInformation(new qook::toolset::KitInformation);
 
     addAutoReleasedObject(new chai::editor::EditorFactory);
     addAutoReleasedObject(new toolset::Settings);
+    addAutoReleasedObject(new project::BuildConfigurationFactory);
 
 
     /*auto action = new QAction(tr("QookPlugin Action"), this);

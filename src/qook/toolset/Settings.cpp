@@ -13,7 +13,7 @@ namespace qook { namespace toolset {
 
 Settings::Settings()
 {
-    setId(constants::QOOK_TOOLSETTINGS_ID);
+    setId(constants::QOOK_TOOLSET_SETTINGS_ID);
     setDisplayName("Cook");
     setCategory(ProjectExplorer::Constants::PROJECTEXPLORER_SETTINGS_CATEGORY);
     setDisplayCategory(QCoreApplication::translate("ProjectExplorer", ProjectExplorer::Constants::PROJECTEXPLORER_SETTINGS_TR_CATEGORY));

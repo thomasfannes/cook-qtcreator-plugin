@@ -1,0 +1,8 @@
+<RCC>
+    <qresource prefix="/icon">
+        <file alias="book">images/book.svg</file>
+        <file alias="cook">images/cook.svg</file>
+        <file alias="recipe">images/recipe.svg</file>
+        <file alias="chai">images/chai.png</file>
+    </qresource>
+</RCC>

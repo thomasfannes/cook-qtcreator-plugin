@@ -33,6 +33,7 @@ public:
 
     bool is_auto_detected() const               { return d_ == AutoDetected; }
     bool is_valid() const                       { return is_valid_; }
+    bool is_default() const;
     Version version() const                     { return version_; }
     const Core::Id & id() const                 { return id_; }
 
