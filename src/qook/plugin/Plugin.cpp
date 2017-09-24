@@ -5,6 +5,8 @@
 #include "qook/toolset/KitInformation.hpp"
 #include "qook/project/Project.hpp"
 #include "qook/project/BuildConfigurationFactory.hpp"
+#include "qook/project/CookBuildStepFactory.hpp"
+#include "qook/project/NinjaBuildStepFactory.hpp"
 
 #include "qook/ProjectWizard.hpp"
 #include "qook/Constants.hpp"
@@ -60,6 +62,8 @@ bool Plugin::initialize(const QStringList &arguments, QString *errorString)
 
     addAutoReleasedObject(new chai::editor::EditorFactory);
     addAutoReleasedObject(new toolset::Settings);
+    addAutoReleasedObject(new project::CookBuildStepFactory);
+    addAutoReleasedObject(new project::NinjaBuildStepFactory);
     addAutoReleasedObject(new project::BuildConfigurationFactory);
 
 

@@ -2,7 +2,6 @@
 #include "qook/project/BuildSettingsWidget.hpp"
 #include "qook/project/CookScriptManager.hpp"
 #include "qook/project/Project.hpp"
-#include "qook/project/ProjectNodes.hpp"
 #include "qook/toolset/KitInformation.hpp"
 #include "qook/Constants.hpp"
 
@@ -13,24 +12,7 @@
 
 namespace qook { namespace project {
 
-namespace  {
 
-ProjectExplorer::FileType convert(FileType ft)
-{
-    switch(ft)
-    {
-    case FileType::Header:
-        return ProjectExplorer::FileType::Header;
-
-    case FileType::Source:
-        return ProjectExplorer::FileType::Source;
-
-    default:
-        return ProjectExplorer::FileType::Unknown;
-    }
-}
-
-}
 
 
 BuildConfiguration::BuildConfiguration(ProjectExplorer::Target * parent)
@@ -87,31 +69,6 @@ const Cook & BuildConfiguration::cook_info() const
     return mngr_->last();
 }
 
-ProjectExplorer::ProjectNode * BuildConfiguration::generate_project_tree() const
-{
-    CookNode * root = new CookNode(project_());
-
-    for (const Recipe & r : cook_info().recipes)
-    {
-        RecipeNode * rn = new RecipeNode(r);
-
-        for(const FileInfo & f : r.files)
-        {
-                auto * n = new ProjectExplorer::FileNode(f.file, convert(f.type), false);
-                rn->addNestedNode(n);
-        }
-
-        ChaiScriptNode * cn = new ChaiScriptNode(r.script);
-        rn->addNode(cn);
-
-        rn->compress();
-        root->addNode(rn);
-    }
-
-
-    return root;
-}
-
 void BuildConfiguration::ctor()
 {
     Project * project = project_();
@@ -126,7 +83,7 @@ void BuildConfiguration::ctor()
             [this, project]()
     {
         clear_error_();
-        project->update_project_data_(this);
+        project->update_project_data_(this, mngr_->last());
     });
 
     connect(mngr_, &CookScriptManager::started, this,
@@ -136,6 +93,8 @@ void BuildConfiguration::ctor()
        project->handle_parsing_started_(this);
     });
 }
+
+
 
 void BuildConfiguration::set_error_(const QString & error)
 {
@@ -164,6 +123,35 @@ BuildConfiguration::BuildType BuildConfiguration::buildType() const
     return type_;
 }
 
+QList<CookBuildTarget> BuildConfiguration::special_targets() const
+{
+    QList<CookBuildTarget> tgts;
+    tgts.append(CookBuildTarget::all());
+    tgts.append(CookBuildTarget::current_executable());
+    tgts.append(CookBuildTarget::clean());
+
+    return tgts;
+}
+
+QList<CookBuildTarget> BuildConfiguration::registered_targets() const
+{
+    QList<CookBuildTarget> tgts;
+    for(const Recipe & recipe: cook_info().recipes)
+    {
+        QString name = recipe.uri;
+        if(!recipe.display_name.isEmpty())
+            name.append(QString(" (%1)").arg(recipe.display_name));
+
+        tgts << CookBuildTarget(name, recipe.uri, buildDirectory());
+    }
+
+    return tgts;
+}
+
+QList<CookBuildTarget> BuildConfiguration::all_targets() const
+{
+    return special_targets() + registered_targets();
+}
 
 
 } }

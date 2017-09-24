@@ -2,6 +2,7 @@
 #define HEADER_qook_project_BuildConfiguration_hpp_ALREADY_INCLUDED
 
 #include "qook/project/Structure.hpp"
+#include "qook/project/CookBuildTarget.hpp"
 #include <projectexplorer/buildconfiguration.h>
 #include <projectexplorer/project.h>
 
@@ -37,11 +38,12 @@ public:
     QStringList tree_format_options() const;
     const toolset::Tool * tool() const;
     const Cook & cook_info() const;
-    QStringList build_targets() const;
 
     void refresh();
 
-    ProjectExplorer::ProjectNode * generate_project_tree() const;
+    QList<CookBuildTarget> registered_targets() const;
+    QList<CookBuildTarget> special_targets() const;
+    QList<CookBuildTarget> all_targets() const;
 
 
 signals:

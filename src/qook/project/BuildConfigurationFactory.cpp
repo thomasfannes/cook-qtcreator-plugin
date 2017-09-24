@@ -1,6 +1,7 @@
 #include "qook/project/BuildConfigurationFactory.hpp"
 #include "qook/project/BuildConfiguration.hpp"
-#include "qook/project/BuildStep.hpp"
+#include "qook/project/CookBuildStep.hpp"
+#include "qook/project/NinjaBuildStep.hpp"
 #include "qook/project/Project.hpp"
 #include "qook/Constants.hpp"
 #include <projectexplorer/projectexplorerconstants.h>
@@ -75,27 +76,31 @@ ProjectExplorer::BuildConfiguration * BuildConfigurationFactory::create(ProjectE
     bc->setDefaultDisplayName(info->displayName);
     bc->setBuildDirectory(info->buildDirectory);
 
-//    info->buildType;
-
     ProjectExplorer::BuildStepList * buildSteps = bc->stepList(ProjectExplorer::Constants::BUILDSTEPS_BUILD);
     {
-        Q_ASSERT(buildSteps);
-        auto makeStep = new CookBuildStep(buildSteps);
-        buildSteps->insertStep(0, makeStep);
-//        makeStep->setBuildTarget("all", /* on = */ true);
+        // first a cook step
+        {
+            Q_ASSERT(buildSteps);
+            auto cookStep = new CookBuildStep(buildSteps);
+            buildSteps->insertStep(0, cookStep);
+        }
 
-//        buildSteps
+        // then the ninja step
+        {
+            Q_ASSERT(buildSteps);
+            auto ninjaStep = new NinjaBuildStep(buildSteps);
+            buildSteps->insertStep(1, ninjaStep);
+        }
     }
-    ProjectExplorer::BuildStepList * cleanSteps = bc->stepList(ProjectExplorer::Constants::BUILDSTEPS_CLEAN);
+//    ProjectExplorer::BuildStepList * cleanSteps = bc->stepList(ProjectExplorer::Constants::BUILDSTEPS_CLEAN);
 
-    Q_ASSERT(buildSteps);
+
 
 
     //    auto makeStep = new ProjectExplorer::GenericMakeStep(buildSteps);
     //    buildSteps->insertStep(0, makeStep);
     //    makeStep->setBuildTarget("all", /* on = */ true);
 
-    Q_ASSERT(cleanSteps);
     //    auto cleanMakeStep = new GenericMakeStep(cleanSteps);
     //    cleanSteps->insertStep(0, cleanMakeStep);
     //    cleanMakeStep->setBuildTarget("clean", /* on = */ true);
@@ -148,23 +153,23 @@ bool BuildConfigurationFactory::can_handle_(const ProjectExplorer::Target * targ
     return qobject_cast<Project *>(target->project());
 }
 
-ProjectExplorer::BuildInfo * BuildConfigurationFactory::create_build_info_(const ProjectExplorer::Kit *k, const Utils::FileName &buildDir, ProjectExplorer::BuildConfiguration::BuildType build_type) const
+ProjectExplorer::BuildInfo * BuildConfigurationFactory::create_build_info_(const ProjectExplorer::Kit *k, const Utils::FileName &project_dir, ProjectExplorer::BuildConfiguration::BuildType build_type) const
 {
     auto info = new ProjectExplorer::BuildInfo(this);
 
+    info->buildDirectory = project_dir;
+    info->kitId = k->id();
+    info->buildType = build_type;
+
     switch(build_type)
     {
-#define CASE(TYPE) case BuildConfiguration::TYPE: info->typeName = tr(#TYPE); break
+#define CASE(TYPE) case BuildConfiguration::TYPE: info->typeName = tr(#TYPE); info->buildDirectory.appendString("-build-"#TYPE); break
     CASE(Debug);
     CASE(Unknown);
     CASE(Profile);
     CASE(Release);
 #undef CASE
     }
-
-    info->buildDirectory = buildDir;
-    info->kitId = k->id();
-    info->buildType = build_type;
 
     return info;
 }

@@ -37,8 +37,13 @@ SOURCES += \
     src/qook/project/CookScriptManager.cpp \
     src/qook/project/BuildSettingsWidget.cpp \
     src/qook/project/BuildConfigurationFactory.cpp \
-    src/qook/project/BuildStep.cpp \
-    src/qook/project/RunConfiguration.cpp
+    src/qook/project/CookBuildStep.cpp \
+    src/qook/project/CookBuildStepConfigWidget.cpp \
+    src/qook/project/CookBuildStepFactory.cpp \
+    src/qook/project/RunConfiguration.cpp \
+    src/qook/project/NinjaBuildStep.cpp \
+    src/qook/project/NinjaBuildStepConfigWidget.cpp \
+    src/qook/project/NinjaBuildStepFactory.cpp
 
 
 HEADERS += \
@@ -69,8 +74,14 @@ HEADERS += \
     src/qook/project/CookScriptManager.hpp \
     src/qook/project/BuildSettingsWidget.hpp \
     src/qook/project/BuildConfigurationFactory.hpp \
-    src/qook/project/BuildStep.hpp \
-    src/qook/project/RunConfiguration.hpp
+    src/qook/project/CookBuildStep.hpp \
+    src/qook/project/CookBuildStepConfigWidget.hpp \
+    src/qook/project/CookBuildStepFactory.hpp \
+    src/qook/project/RunConfiguration.hpp \
+    src/qook/project/NinjaBuildStep.hpp \
+    src/qook/project/NinjaBuildStepConfigWidget.hpp \
+    src/qook/project/NinjaBuildStepFactory.hpp \
+    src/qook/project/CookBuildTarget.hpp
 
 OTHER_FILES += \
     QookPlugin.json.in

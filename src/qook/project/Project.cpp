@@ -1,4 +1,5 @@
 #include "qook/project/Project.hpp"
+#include "qook/project/ProjectNodes.hpp"
 #include "qook/project/BuildConfiguration.hpp"
 #include "qook/Constants.hpp"
 #include "qook/toolset/KitInformation.hpp"
@@ -10,6 +11,25 @@
 
 
 namespace qook { namespace project {
+
+namespace  {
+
+ProjectExplorer::FileType convert(FileType ft)
+{
+    switch(ft)
+    {
+    case FileType::Header:
+        return ProjectExplorer::FileType::Header;
+
+    case FileType::Source:
+        return ProjectExplorer::FileType::Source;
+
+    default:
+        return ProjectExplorer::FileType::Unknown;
+    }
+}
+
+}
 
 Project::Project(const Utils::FileName & filename)
     : ProjectExplorer::Project(constants::QOOK_MIME_TYPE, filename, [this]() { refresh(); }),
@@ -27,6 +47,13 @@ Project::Project(const Utils::FileName & filename)
 Project::~Project()
 {
     delete cpp_code_model_updater_;
+}
+
+bool Project::has_built_target(const CookBuildTarget & tgt) const
+{
+    QTC_ASSERT(current_build_config_, return false);
+
+    return current_build_config_->all_targets().contains(tgt);
 }
 
 void Project::active_target_changed(ProjectExplorer::Target *target)
@@ -74,16 +101,15 @@ void Project::handle_parsing_error_(BuildConfiguration * configuration)
     emitParsingFinished(false);
 }
 
-void Project::update_project_data_(BuildConfiguration * configuration)
+void Project::update_project_data_(BuildConfiguration * configuration, const Cook &cook_info)
 {
     // make sure we are updating the active built configuration
     auto * t = activeTarget();
     if(!t || t->activeBuildConfiguration() != configuration)
         return;
 
-    auto * root = configuration->generate_project_tree();
-    setRootProjectNode(root);
-
+    cook_info_ = cook_info;
+    generate_project_tree_();
     refresh_cpp_code_model_();
 
     emitParsingFinished(true);
@@ -111,6 +137,30 @@ ProjectExplorer::Project::RestoreResult Project::fromMap(const QVariantMap &map,
     return ProjectExplorer::Project::fromMap(map, errorMessage);
 }
 
+void Project::generate_project_tree_()
+{
+    CookNode * root = new CookNode(this);
+
+    for (const Recipe & r : cook_info_.recipes)
+    {
+        RecipeNode * rn = new RecipeNode(r);
+
+        for(const FileInfo & f : r.files)
+        {
+                auto * n = new ProjectExplorer::FileNode(f.file, convert(f.type), false);
+                rn->addNestedNode(n);
+        }
+
+        ChaiScriptNode * cn = new ChaiScriptNode(r.script);
+        rn->addNode(cn);
+
+        rn->compress();
+        root->addNode(rn);
+    }
+
+    setRootProjectNode(root);
+}
+
 void Project::refresh_cpp_code_model_()
 {
     QTC_ASSERT(current_build_config_, return);
@@ -124,7 +174,7 @@ void Project::refresh_cpp_code_model_()
 
     CppTools::RawProjectParts rpps;
 
-    for(const Recipe & recipe : current_build_config_->cook_info().recipes)
+    for(const Recipe & recipe : cook_info_.recipes)
     {
         CppTools::RawProjectPart rpp;
         rpp.setDisplayName(recipe.uri);
@@ -143,6 +193,16 @@ void Project::refresh_cpp_code_model_()
 
     const CppTools::ProjectUpdateInfo projectInfoUpdate(this, cToolChain, cxxToolChain, k, rpps);
     cpp_code_model_updater_->update(projectInfoUpdate);
+}
+
+QStringList Project::build_target_titles() const
+{
+    QStringList targets;
+
+    for(const Recipe & recipe : cook_info_.recipes)
+        targets << recipe.build_target.toString();
+
+    return targets;
 }
 
 

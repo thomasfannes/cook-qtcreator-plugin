@@ -27,7 +27,7 @@ public:
 
 private:
     bool can_handle_(const ProjectExplorer::Target * target) const;
-    ProjectExplorer::BuildInfo * create_build_info_(const ProjectExplorer::Kit *k, const Utils::FileName &buildDir, ProjectExplorer::BuildConfiguration::BuildType build_type) const;
+    ProjectExplorer::BuildInfo * create_build_info_(const ProjectExplorer::Kit *k, const Utils::FileName &project_dir, ProjectExplorer::BuildConfiguration::BuildType build_type) const;
 
     static std::vector<ProjectExplorer::BuildConfiguration::BuildType> different_configurations_;
 };
