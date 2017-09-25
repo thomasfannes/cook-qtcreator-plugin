@@ -1,9 +1,9 @@
 [submodule "gubg.io"]
 	path = gubg.io
-	url = git@github.com:gfannes/gubg.io.git
+	url = https://github.com/gfannes/gubg.io
 [submodule "gubg.std"]
 	path = gubg.std
-	url = git@github.com:gfannes/gubg.std.git
+	url = https://github.com/gfannes/gubg.std
 [submodule "gubg.extra"]
 	path = gubg.extra
-	url = git@github.com:thomasfannes/gubg.extra.git
+	url = https://github.com/thomasfannes/gubg.extra
