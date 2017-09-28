@@ -42,17 +42,17 @@ CookBuildStep::CookBuildStep(ProjectExplorer::BuildStepList * parent, Core::Id i
     ctor_(parent);
 }
 
-void CookBuildStep::ctor_(ProjectExplorer::BuildStepList *parent)
+void CookBuildStep::ctor_(ProjectExplorer::BuildStepList */*parent*/)
 {
     if(build_target_.uri.isEmpty())
-    {
-        if(parent->id() == ProjectExplorer::Constants::BUILDSTEPS_CLEAN)
-            set_build_target_(CookBuildTarget::clean());
-        else
-            set_build_target_(CookBuildTarget::all());
-    }
+        set_build_target_(CookBuildTarget::current_executable());
 
-    connect(project(), &ProjectExplorer::Project::parsingFinished, this, &CookBuildStep::build_target_changes_);
+    connect(project_(), &Project::recipes_available, this, &CookBuildStep::build_targets_changed);
+}
+
+Project * CookBuildStep::project_() const
+{
+    return static_cast<Project *>(project());
 }
 
 bool CookBuildStep::fromMap(const QVariantMap &map)
@@ -100,11 +100,6 @@ ProjectExplorer::BuildStepConfigWidget * CookBuildStep::createConfigWidget()
     return new CookBuildStepConfigWidget(this);
 }
 
-void CookBuildStep::build_target_changes_()
-{
-    emit build_targets_changed();
-}
-
 QList<CookBuildTarget> CookBuildStep::all_targets() const
 {
     return build_configuration_()->all_targets();
@@ -138,11 +133,14 @@ QString CookBuildStep::all_arguments_(RunConfiguration *run_configuration) const
 {
     QString arguments;
 
+    Utils::QtcProcess::addArg(&arguments, "--generate");
+    Utils::QtcProcess::addArg(&arguments, "build.ninja");
+
+    Utils::QtcProcess::addArg(&arguments, "--input");
+    Utils::QtcProcess::addArg(&arguments, project()->projectFilePath().toString());
+
     Utils::QtcProcess::addArg(&arguments, "--build-dir");
     Utils::QtcProcess::addArg(&arguments, ".");
-
-    Utils::QtcProcess::addArg(&arguments, "--source-dir");
-    Utils::QtcProcess::addArg(&arguments, project()->projectDirectory().toString());
 
     switch(buildConfiguration()->buildType())
     {
@@ -160,7 +158,7 @@ QString CookBuildStep::all_arguments_(RunConfiguration *run_configuration) const
         break;
     }
 
-    if(build_target_ == CookBuildTarget::all())
+    /*if(build_target_ == CookBuildTarget::all())
     {
         Utils::QtcProcess::addArg(&arguments, "--target-all");
     }
@@ -168,14 +166,13 @@ QString CookBuildStep::all_arguments_(RunConfiguration *run_configuration) const
     {
         Utils::QtcProcess::addArg(&arguments, "clean");
     }
-    else if(build_target_.is_special)
+    else */if(build_target_.is_special)
     {
         QString target =  "<i>&lt;" + build_target_.display_name+ "&gt;</i>";
         Utils::QtcProcess::addArg(&arguments, target);
     }
     else
     {
-        Utils::QtcProcess::addArg(&arguments, "--target");
         Utils::QtcProcess::addArg(&arguments, build_target_.uri);
     }
 
@@ -221,8 +218,6 @@ bool CookBuildStep::configure_process_parameters_(ProjectExplorer::ProcessParame
         param.setCommand(bc->tool()->exec_file().filePath());
         param.setArguments(all_arguments_(run_configuration));
     }
-
-    qDebug() << "Cook step:" << can_init;
 
     return can_init;
 }

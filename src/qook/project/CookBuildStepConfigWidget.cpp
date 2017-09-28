@@ -45,6 +45,8 @@ QString CookBuildStepConfigWidget::displayName() const
 
 void CookBuildStepConfigWidget::build_targets_changed()
 {
+    qDebug() << "called";
+
     const bool was_locked = build_targets_->blockSignals(true);
     build_targets_->clear();
 
@@ -71,7 +73,7 @@ void CookBuildStepConfigWidget::build_targets_changed()
 
 void CookBuildStepConfigWidget::item_changed(QListWidgetItem * item)
 {
-    const CookBuildTarget tgt = (item->checkState() == Qt::Checked ? item->data(Qt::UserRole).value<CookBuildTarget>() : CookBuildTarget::all());
+    const CookBuildTarget tgt = (item->checkState() == Qt::Checked ? item->data(Qt::UserRole).value<CookBuildTarget>() : CookBuildTarget::current_executable());
     build_step_->set_build_target_(tgt);
     update_details();
 }

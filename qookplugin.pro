@@ -31,10 +31,7 @@ SOURCES += \
     src/qook/toolset/KitConfigWidget.cpp \
     src/qook/project/Project.cpp \
     src/qook/project/BuildConfiguration.cpp \
-    src/qook/project/Parser.cpp \
-    src/qook/project/RecipeScanner.cpp \
     src/qook/project/ProjectNodes.cpp \
-    src/qook/project/CookScriptManager.cpp \
     src/qook/project/BuildSettingsWidget.cpp \
     src/qook/project/BuildConfigurationFactory.cpp \
     src/qook/project/CookBuildStep.cpp \
@@ -43,7 +40,14 @@ SOURCES += \
     src/qook/project/RunConfiguration.cpp \
     src/qook/project/NinjaBuildStep.cpp \
     src/qook/project/NinjaBuildStepConfigWidget.cpp \
-    src/qook/project/NinjaBuildStepFactory.cpp
+    src/qook/project/NinjaBuildStepFactory.cpp \
+    src/qook/project/RunSettingsWidget.cpp \
+    src/qook/project/RunConfigurationFactory.cpp \
+    src/qook/project/info/RecipesParser.cpp \
+    src/qook/project/info/RecipesManager.cpp \
+    src/qook/project/InfoManager.cpp \
+    src/qook/project/info/DetailedRecipesManager.cpp \
+    src/qook/project/info/DetailedRecipesParser.cpp
 
 
 HEADERS += \
@@ -67,11 +71,7 @@ HEADERS += \
     src/qook/toolset/KitConfigWidget.hpp \
     src/qook/project/Project.hpp \
     src/qook/project/BuildConfiguration.hpp \
-    src/qook/project/Structure.hpp \
-    src/qook/project/Parser.hpp \
-    src/qook/project/RecipeScanner.hpp \
     src/qook/project/ProjectNodes.hpp \
-    src/qook/project/CookScriptManager.hpp \
     src/qook/project/BuildSettingsWidget.hpp \
     src/qook/project/BuildConfigurationFactory.hpp \
     src/qook/project/CookBuildStep.hpp \
@@ -81,7 +81,26 @@ HEADERS += \
     src/qook/project/NinjaBuildStep.hpp \
     src/qook/project/NinjaBuildStepConfigWidget.hpp \
     src/qook/project/NinjaBuildStepFactory.hpp \
-    src/qook/project/CookBuildTarget.hpp
+    src/qook/project/CookBuildTarget.hpp \
+    src/qook/project/RunSettingsWidget.hpp \
+    src/qook/project/RunConfigurationFactory.hpp \
+    src/qook/project/info/RecipesParser.hpp \
+    src/qook/project/info/RecipesManager.hpp \
+    src/qook/project/info/AsyncManager.hpp \
+    src/qook/project/info/AsyncManager.hxx \
+    src/qook/project/info/Types.hpp \
+    src/qook/project/info/Parser.hpp \
+    src/qook/project/info/Parser.hxx \
+    src/qook/project/InfoManager.hpp \
+    src/qook/project/info/DetailedRecipesManager.hpp \
+    src/qook/project/info/DetailedRecipesParser.hpp \
+    gubg.extra/src/gubg/parse/polymorphic_tree/RootElement.hpp \
+    src/qook/project/InfoManagerType.hpp \
+    src/qook/project/ParseRequestRun.hpp
+
+
+
+
 
 OTHER_FILES += \
     QookPlugin.json.in

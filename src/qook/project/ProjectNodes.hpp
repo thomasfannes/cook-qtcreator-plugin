@@ -1,12 +1,12 @@
 #ifndef HEADER_qook_project_ProjectNodes_hpp_ALREADY_INCLUDED
 #define HEADER_qook_project_ProjectNodes_hpp_ALREADY_INCLUDED
 
+#include <qook/project/info/Types.hpp>
 #include <projectexplorer/projectnodes.h>
 
 namespace qook { namespace project {
 
 class Project;
-class Recipe;
 
 class CookNode : public ProjectExplorer::ProjectNode
 {
@@ -23,7 +23,7 @@ private:
 class RecipeNode : public ProjectExplorer::ProjectNode
 {
 public:
-    explicit RecipeNode(const Recipe & recipe);
+    explicit RecipeNode(const info::DetailedRecipe & recipe);
 
     void compress();
 };

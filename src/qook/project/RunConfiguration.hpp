@@ -1,50 +1,50 @@
-#ifndef HEADER_qook_project_RunConfiguration_hpp_ALREADY_INCLUDED
-#define HEADER_qook_project_RunConfiguration_hpp_ALREADY_INCLUDED
+//#ifndef HEADER_qook_project_RunConfiguration_hpp_ALREADY_INCLUDED
+//#define HEADER_qook_project_RunConfiguration_hpp_ALREADY_INCLUDED
 
-#include <projectexplorer/runconfiguration.h>
-#include "qook/project/CookBuildStep.hpp"
+//#include <projectexplorer/runconfiguration.h>
+//#include "qook/project/CookBuildStep.hpp"
 
-namespace qook { namespace project {
+//namespace qook { namespace project {
 
-class RunConfiguration : public ProjectExplorer::RunConfiguration
-{
-    Q_OBJECT
-    friend class CMakeRunConfigurationWidget;
-    friend class CMakeRunConfigurationFactory;
+//class RunConfiguration : public ProjectExplorer::RunConfiguration
+//{
+//    Q_OBJECT
+//    friend class CMakeRunConfigurationWidget;
+//    friend class CMakeRunConfigurationFactory;
 
-public:
-    RunConfiguration(ProjectExplorer::Target * parent, Core::Id id, const CookBuildTarget & target, const Utils::FileName &workingDirectory, const QString &title);
+//public:
+//    RunConfiguration(ProjectExplorer::Target * parent, Core::Id id, const CookBuildTarget & target, const Utils::FileName &workingDirectory, const QString &title);
 
-    ProjectExplorer::Runnable runnable() const override;
-    QWidget *createConfigurationWidget() override;
+//    ProjectExplorer::Runnable runnable() const override;
+//    QWidget *createConfigurationWidget() override;
 
-    void setExecutable(const QString &executable);
-    void setBaseWorkingDirectory(const Utils::FileName &workingDirectory);
+//    void setExecutable(const QString &executable);
+//    void setBaseWorkingDirectory(const Utils::FileName &workingDirectory);
 
-    QString title() const;
+//    QString title() const;
 
-    QVariantMap toMap() const override;
+//    QVariantMap toMap() const override;
 
-    QString disabledReason() const override;
+//    QString disabledReason() const override;
 
-    QString buildSystemTarget() const final;
+//    QString buildSystemTarget() const final;
 
-protected:
-    RunConfiguration(ProjectExplorer::Target *parent, RunConfiguration *source);
-    bool fromMap(const QVariantMap &map) override;
-    QString defaultDisplayName() const;
+//protected:
+//    RunConfiguration(ProjectExplorer::Target *parent, RunConfiguration *source);
+//    bool fromMap(const QVariantMap &map) override;
+//    QString defaultDisplayName() const;
 
-    void updateEnabledState() final;
+//    void updateEnabledState() final;
 
-private:
-    QString baseWorkingDirectory() const;
-    void ctor();
+//private:
+//    QString baseWorkingDirectory() const;
+//    void ctor();
 
-    CookBuildTarget build_system_target_;
-    QString executable_;
-    QString title_;
-};
+//    CookBuildTarget build_system_target_;
+//    QString executable_;
+//    QString title_;
+//};
 
-} }
+//} }
 
-#endif
+//#endif

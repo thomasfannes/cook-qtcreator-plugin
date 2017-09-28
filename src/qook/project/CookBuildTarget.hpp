@@ -23,9 +23,8 @@ struct CookBuildTarget
         executable.appendPath(uri);
     }
 
-    static CookBuildTarget all()                { return CookBuildTarget ("all", "", Utils::FileName(), true); }
-    static CookBuildTarget clean()              { return CookBuildTarget ("clean", "", Utils::FileName(), true); }
-    static CookBuildTarget current_executable() { return CookBuildTarget ("current executable", "", Utils::FileName(), true); }
+    static CookBuildTarget default_target()         { return CookBuildTarget ("default", "", Utils::FileName(), true); }
+    static CookBuildTarget current_executable()     { return CookBuildTarget ("current executable", "", Utils::FileName(), true); }
 
     bool operator==(const CookBuildTarget & rhs) const
     {

@@ -8,8 +8,8 @@ namespace qook { namespace project {
 
 class BuildConfiguration;
 class RunConfiguration;
+class Project;
 class CookBuildStepConfigWidget;
-
 
 class CookBuildStep : public ProjectExplorer::AbstractProcessStep
 {
@@ -26,18 +26,13 @@ public:
     QList<CookBuildTarget> all_targets() const;
     bool builds_target(const CookBuildTarget & target) const;
 
-
 signals:
     void build_targets_changed();
     void build_target_changed();
 
-private slots:
-    void build_target_changes_();
-
-protected:
-
-
 private:
+    Project * project_() const;
+
     friend class CookBuildStepConfigWidget;
     friend class CookBuildStepFactory;
 

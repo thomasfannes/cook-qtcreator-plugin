@@ -80,13 +80,7 @@ void KitInformation::setup(ProjectExplorer::Kit *k)
 {
     const Tool * tool = KitInformation::tool(k);
     if (!tool)
-    {
         set_tool(k, default_cook_tool_id());
-
-        qDebug() << "setup called on " << k->displayName();
-        qDebug() << "         new tool: " << default_cook_tool_id();
-        qDebug() << "  available tools: " << Manager::instance()->registered_tools().size();
-    }
 }
 
 void KitInformation::fix(ProjectExplorer::Kit *k)

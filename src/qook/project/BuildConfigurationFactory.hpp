@@ -1,7 +1,6 @@
 #ifndef HEADER_qook_project_BuildConfigurationFactory_hpp_ALREADY_INCLUDED
 #define HEADER_qook_project_BuildConfigurationFactory_hpp_ALREADY_INCLUDED
 
-#include "qook/project/Structure.hpp"
 #include <projectexplorer/buildconfiguration.h>
 
 namespace qook { namespace project {

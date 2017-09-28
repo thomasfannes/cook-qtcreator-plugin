@@ -172,23 +172,19 @@ void Manager::restore()
     QList<Tool*> auto_detected = autodetect_tools_();
 
     QList<Tool*> to_register;
+
+
     // start by adding the persistent tools
     while(!persistent.empty())
     {
         Tool * tool = persistent.takeLast();
 
-        // an auto detected tool not in the auto_detected list, is from a previous setting
-        // the user cannot edit it, so do not add it
-        if (tool->is_auto_detected())
+        // a persisten auto-detected tool which is not valid should not be added
+        if (tool->is_auto_detected() && !tool->is_valid())
         {
-            // not in the autodetected list?
-            if (!Utils::anyOf(auto_detected, Utils::equal(&Tool::exec_file, tool->exec_file())))
-            {
-                qWarning() << QString::fromLatin1("Previously autodetected cook tool \"%1\" (%2) dropped.").arg(tool->exec_file().absoluteFilePath(), tool->id().toString());
-
-                delete tool;
-                continue;
-            }
+            qWarning() << QString::fromLatin1("Previously autodetected cook tool \"%1\" (%2) dropped.").arg(tool->exec_file().absoluteFilePath(), tool->id().toString());
+            delete tool;
+            continue;
         }
 
         to_register.append(tool);
@@ -210,11 +206,22 @@ void Manager::restore()
     }
 
     for(Tool * tool : to_register)
+    {
         if(!register_tool(tool))
         {
             qWarning() << QString::fromLatin1("cook tool \"%1\" (%2) dropped.").arg(tool->exec_file().absoluteFilePath(), tool->id().toString());
             delete tool;
         }
+    }
+
+    // Is the default tool in the registered list ?
+    if (!Utils::anyOf(registered_tools(), Utils::equal(&Tool::id, default_tool_id()) ))
+    {
+        if(registered_tools().empty())
+            default_tool_id_ = Core::Id();
+        else
+            default_tool_id_ = registered_tools().front()->id();
+    }
 }
 
 QList<Tool *> Manager::load_tools_()
@@ -242,7 +249,10 @@ QList<Tool *> Manager::load_tools_()
             continue;
 
         if (tool->is_auto_detected() && !tool->is_valid())
+        {
+            delete tool;
             continue;
+        }
 
         loaded.append(tool);
     }

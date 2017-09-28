@@ -1,6 +1,5 @@
 #include "qook/project/ProjectNodes.hpp"
 #include "qook/project/Project.hpp"
-#include "qook/project/Structure.hpp"
 
 namespace qook { namespace project {
 
@@ -21,7 +20,7 @@ QString CookNode::tooltip() const
     return project_->displayName();
 }
 
-RecipeNode::RecipeNode(const Recipe &recipe)
+RecipeNode::RecipeNode(const info::DetailedRecipe &recipe)
     : ProjectExplorer::ProjectNode(recipe.script.parentDir())
 {
     QString name = recipe.uri;
