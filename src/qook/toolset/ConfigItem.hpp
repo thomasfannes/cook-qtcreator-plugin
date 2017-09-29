@@ -7,18 +7,18 @@
 namespace qook { namespace toolset {
 
 class ConfigItemModel;
-class Manager;
 
 class ConfigItem : public Utils::TreeItem
 {
 public:
-    ConfigItem();
-    ConfigItem(const Tool *tool);
+    ConfigItem(const ToolFactoryInterface * factory);
+    ConfigItem(const ToolFactoryInterface * factory, const Tool * tool);
+    ~ConfigItem();
 
     virtual QVariant data(int column, int role) const override;
 
-    Tool & tool()               { return tool_; }
-    const Tool & tool() const   { return tool_; }
+    Tool & tool()                   { return *tool_; }
+    const Tool & tool() const       { return *tool_; }
     bool has_changed() const;
 
     bool is_default() const;
@@ -28,8 +28,9 @@ public:
 
 private:
     ConfigItemModel * model() const;
-    Tool tool_;
+    Tool * tool_;
     const Tool * original_tool_;
+    const ToolFactoryInterface * factory_;
 };
 
 } }

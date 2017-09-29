@@ -4,7 +4,7 @@
 #include "qook/project/InfoManagerType.hpp"
 #include "qook/project/info/Types.hpp"
 #include "qook/project/info/RecipesManager.hpp"
-#include "qook/project/info/DetailedRecipesManager.hpp"
+#include "qook/project/info/BuildRecipesManager.hpp"
 #include <QFuture>
 #include <QFlags>
 
@@ -13,7 +13,7 @@ namespace qook { namespace project {
 namespace info {
 
 class RecipesManager;
-class DetailedRecipesManager;
+class BuildRecipesManager;
 
 }
 
@@ -27,8 +27,8 @@ public:
     InfoManager(BuildConfiguration * config);
     ~InfoManager();
 
-    info::RecipesManager & recipes()                  { return *recipes_mgr_; }
-    info::DetailedRecipesManager & detailed_recipes() { return *detailed_recipes_mgr_; }
+    info::RecipesManager & recipes()                { return *recipes_mgr_; }
+    info::BuildRecipesManager & build_recipes()     { return *build_recipes_mgr_; }
 
 signals:
     void started(InfoRequestType type);
@@ -38,7 +38,7 @@ signals:
 private:
     using ParserFlags = QFlags<InfoRequestType>;
     info::RecipesManager * recipes_mgr_;
-    info::DetailedRecipesManager * detailed_recipes_mgr_;
+    info::BuildRecipesManager * build_recipes_mgr_;
 };
 
 } }

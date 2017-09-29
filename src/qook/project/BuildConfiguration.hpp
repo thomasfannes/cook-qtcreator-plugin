@@ -10,7 +10,7 @@
 
 namespace qook {
 
-namespace toolset { class Tool; }
+namespace toolset { class CookTool; }
 
 namespace project {
 
@@ -36,8 +36,11 @@ public:
     BuildType buildType() const override;
 
     const info::Recipes & recipes_info() const;
-    const info::DetailedRecipes & detailed_recipes_info() const;
-    bool knows_uri(const QString & uri) const;
+    const info::BuildRecipes & build_recipes_info() const;
+
+    const info::Recipe * find_recipe(const QString & uri) const;
+    const info::BuildRecipe * find_build_recipe(const QString & uri) const;
+
 
     bool refresh(QFlags<InfoRequestType> flags);
     const QString & error() const { return error_; }
@@ -47,11 +50,11 @@ public:
 
     QString target_uri() const;
 
-    const toolset::Tool * tool() const;
+    const toolset::CookTool * tool() const;
 
-    QList<CookBuildTarget> registered_targets() const;
-    QList<CookBuildTarget> special_targets() const;
-    QList<CookBuildTarget> all_targets() const;
+    QList<CookBuildTarget> special_targets_() const;
+    QList<CookBuildTarget> all_build_targets() const;
+    QList<CookBuildTarget> all_run_targets() const;
 
 signals:
     void error_occured(const QString & error);

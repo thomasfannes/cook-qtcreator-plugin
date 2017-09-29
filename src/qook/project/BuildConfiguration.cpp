@@ -60,12 +60,12 @@ BuildConfiguration::~BuildConfiguration()
 
 QStringList BuildConfiguration::all_recipes_options() const
 {
-    return {"-g", "recipes.tree", "-f", project()->projectFilePath().toString() };
+    return {"-g", "recipes.tree", "-f", project()->projectFilePath().toString(), "-b", buildDirectory().toString() };
 }
 
 QStringList BuildConfiguration::recipe_detail_options(const QString & uri) const
 {
-    return {"-g", "details.tree", "-f", project()->projectFilePath().toString(), uri };
+    return {"-g", "details.tree", "-f", project()->projectFilePath().toString(), "-b", buildDirectory().toString(), uri };
 }
 
 QStringList BuildConfiguration::build_options(const QString & uri) const
@@ -77,9 +77,9 @@ const info::Recipes & BuildConfiguration::recipes_info() const
 {
     return info_mngr_->recipes().latest();
 }
-const info::DetailedRecipes &BuildConfiguration::detailed_recipes_info() const
+const info::BuildRecipes &BuildConfiguration::build_recipes_info() const
 {
-    return info_mngr_->detailed_recipes().latest();
+    return info_mngr_->build_recipes().latest();
 }
 
 QString BuildConfiguration::target_uri() const
@@ -112,7 +112,7 @@ ProjectExplorer::ProjectNode * BuildConfiguration::generate_tree() const
 {
     CookNode * root = new CookNode(project_());
 
-    for (const info::DetailedRecipe & r : detailed_recipes_info().recipes)
+    for (const info::BuildRecipe & r : build_recipes_info().recipes)
     {
         RecipeNode * rn = new RecipeNode(r);
 
@@ -144,7 +144,7 @@ void BuildConfiguration::refresh_cpp_code_model(CppTools::CppProjectUpdater * cp
 
     CppTools::RawProjectParts rpps;
 
-    for(const info::DetailedRecipe & recipe : detailed_recipes_info().recipes)
+    for(const info::BuildRecipe & recipe : build_recipes_info().recipes)
     {
         CppTools::RawProjectPart rpp;
         rpp.setDisplayName(recipe.uri);
@@ -165,9 +165,9 @@ void BuildConfiguration::refresh_cpp_code_model(CppTools::CppProjectUpdater * cp
     cpp_updater->update(projectInfoUpdate);
 }
 
-const toolset::Tool * BuildConfiguration::tool() const
+const toolset::CookTool * BuildConfiguration::tool() const
 {
-    return toolset::KitInformation::tool(target()->kit());
+    return toolset::KitInformation::cook_tool(target()->kit());
 }
 
 Project * BuildConfiguration::project_() const
@@ -215,9 +215,16 @@ void BuildConfiguration::ctor()
     connect(info_mngr_, &InfoManager::error_occurred, this, &BuildConfiguration::handle_error_occured);
 }
 
-bool BuildConfiguration::knows_uri(const QString & uri) const
+const info::Recipe * BuildConfiguration::find_recipe(const QString & uri) const
 {
-    return Utils::anyOf(recipes_info().recipes, Utils::equal(&info::Recipe::uri, uri));
+    auto it = recipes_info().recipes.find(uri);
+    return (it == recipes_info().recipes.end() ? nullptr : &*it);
+}
+
+const info::BuildRecipe * BuildConfiguration::find_build_recipe(const QString & uri) const
+{
+    auto it = build_recipes_info().recipes.find(uri);
+    return (it == build_recipes_info().recipes.end() ? nullptr : &*it);
 }
 
 void BuildConfiguration::start_refresh_(InfoRequestType type)
@@ -231,10 +238,10 @@ void BuildConfiguration::start_refresh_(InfoRequestType type)
             break;
         }
 
-        case InfoRequestType::Detailed_Recipes:
+        case InfoRequestType::Build_Recipes:
         {
             QString uri = target_uri();
-            if (!knows_uri(uri))
+            if (!find_recipe(uri))
             {
                 handle_request_started(type);
                 handle_error_occured(QString("Unknown uri: <%1>").arg(uri), type);
@@ -242,8 +249,8 @@ void BuildConfiguration::start_refresh_(InfoRequestType type)
             }
             else
             {
-                QTC_ASSERT(info_mngr_->detailed_recipes().start_async(target_uri()), return);
-                Core::ProgressManager::addTask(info_mngr_->detailed_recipes().future(), "Cooking", "Cook.scan.recipes");
+                QTC_ASSERT(info_mngr_->build_recipes().start_async(target_uri()), return);
+                Core::ProgressManager::addTask(info_mngr_->build_recipes().future(), "Cooking", "Cook.scan.recipes");
             }
             break;
         }
@@ -253,8 +260,6 @@ void BuildConfiguration::start_refresh_(InfoRequestType type)
             QTC_ASSERT(unknown_info_request_type, return);
     }
 }
-
-
 
 void BuildConfiguration::set_error_(const QString & error)
 {
@@ -278,7 +283,7 @@ BuildConfiguration::BuildType BuildConfiguration::buildType() const
     return type_;
 }
 
-QList<CookBuildTarget> BuildConfiguration::special_targets() const
+QList<CookBuildTarget> BuildConfiguration::special_targets_() const
 {
     QList<CookBuildTarget> tgts;
     tgts.append(CookBuildTarget::current_executable());
@@ -286,24 +291,24 @@ QList<CookBuildTarget> BuildConfiguration::special_targets() const
     return tgts;
 }
 
-QList<CookBuildTarget> BuildConfiguration::registered_targets() const
-{
-    QList<CookBuildTarget> tgts;
-    for(const info::Recipe & recipe: recipes_info().recipes)
-    {
-        QString name = recipe.uri;
-        if(!recipe.display_name.isEmpty())
-            name.append(QString(" (%1)").arg(recipe.display_name));
+QList<CookBuildTarget> BuildConfiguration::all_build_targets() const
+{    
+    QList<CookBuildTarget> tgts = special_targets_();
 
-        tgts << CookBuildTarget(name, recipe.uri, buildDirectory());
-    }
+    for(const info::Recipe & recipe: recipes_info().recipes)
+        tgts << CookBuildTarget(recipe);
 
     return tgts;
 }
 
-QList<CookBuildTarget> BuildConfiguration::all_targets() const
+QList<CookBuildTarget> BuildConfiguration::all_run_targets() const
 {
-    return special_targets() + registered_targets();
+    QList<CookBuildTarget> tgts;
+
+    for(const info::BuildRecipe & recipe: build_recipes_info().recipes)
+        tgts << CookBuildTarget(recipe);
+
+    return tgts;
 }
 
 

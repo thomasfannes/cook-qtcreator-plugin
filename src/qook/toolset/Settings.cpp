@@ -11,10 +11,14 @@
 
 namespace qook { namespace toolset {
 
-Settings::Settings()
+Settings::Settings(const Core::Id & type_id, const QString & name)
+    : type_id_(type_id),
+      name_(name)
 {
-    setId(constants::QOOK_TOOLSET_SETTINGS_ID);
-    setDisplayName("Cook");
+    Core::Id id(constants::QOOK_TOOLSET_SETTINGS_ID);
+
+    setId(id.withSuffix(name_));
+    setDisplayName(name_);
     setCategory(ProjectExplorer::Constants::PROJECTEXPLORER_SETTINGS_CATEGORY);
     setDisplayCategory(QCoreApplication::translate("ProjectExplorer", ProjectExplorer::Constants::PROJECTEXPLORER_SETTINGS_TR_CATEGORY));
     setCategoryIcon(Utils::Icon(ProjectExplorer::Constants::PROJECTEXPLORER_SETTINGS_CATEGORY_ICON));
@@ -23,7 +27,7 @@ Settings::Settings()
 QWidget * Settings::widget()
 {
     if (!widget_)
-        widget_ = new SettingsWidget;
+        widget_ = new SettingsWidget(type_id_, name_);
 
     return widget_;
 }

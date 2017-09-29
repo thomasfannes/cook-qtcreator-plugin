@@ -24,6 +24,8 @@ public:
     virtual bool supportsKit(ProjectExplorer::Kit *k, QString *errorMessage) const override;
     virtual bool needsConfiguration() const;
 
+    BuildConfiguration * active_build_configuration() const;
+
 signals:
     void recipes_available();
     void detailed_recipes_available();
@@ -35,8 +37,11 @@ public slots:
 private slots:
     void active_target_changed(ProjectExplorer::Target *target);
 
+
+
 protected:
     virtual RestoreResult fromMap(const QVariantMap &map, QString *errorMessage) final;
+    virtual bool setupTarget(ProjectExplorer::Target *t) override;
 
 private:
     friend class BuildConfiguration;

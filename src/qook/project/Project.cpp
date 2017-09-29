@@ -14,7 +14,7 @@
 namespace qook { namespace project {
 
 Project::Project(const Utils::FileName & filename)
-    : ProjectExplorer::Project(constants::QOOK_MIME_TYPE, filename, [this]() { refresh(InfoRequestType::Detailed_Recipes); }),
+    : ProjectExplorer::Project(constants::QOOK_MIME_TYPE, filename, [this]() { refresh(InfoRequestType::Build_Recipes); }),
       connected_target_(nullptr),
       current_build_config_(nullptr),
       cpp_code_model_updater_(new CppTools::CppProjectUpdater(this))
@@ -50,9 +50,14 @@ void Project::active_target_changed(ProjectExplorer::Target *target)
     refresh_all();
 }
 
+BuildConfiguration * Project::active_build_configuration() const
+{
+    return current_build_config_;
+}
+
 void Project::refresh_all()
 {
-    refresh(InfoRequestType::Recipes | InfoRequestType::Detailed_Recipes);
+    refresh(InfoRequestType::Recipes | InfoRequestType::Build_Recipes);
 }
 
 void Project::refresh(RequestFlags flags)
@@ -61,7 +66,8 @@ void Project::refresh(RequestFlags flags)
     QTC_ASSERT(connected_target_, return);
     current_build_config_ = static_cast<BuildConfiguration*>(connected_target_->activeBuildConfiguration());
     QTC_ASSERT(current_build_config_, return);
-    QTC_CHECK(current_build_config_->refresh(flags));
+
+    current_build_config_->refresh(flags);
 }
 
 void Project::handle_parsing_started_(BuildConfiguration * configuration, RequestFlags flags)
@@ -97,10 +103,10 @@ void Project::handle_sub_parsing_finished(BuildConfiguration * configuration, In
                 emit recipes_available();
                 break;
 
-            case InfoRequestType::Detailed_Recipes:
+            case InfoRequestType::Build_Recipes:
                 generate_project_tree_();
                 refresh_cpp_code_model_();
-                emit detailed_recipes_available();
+                activeTarget()->updateDefaultRunConfigurations();
                 break;
         }
     }
@@ -111,7 +117,7 @@ void Project::handle_sub_parsing_finished(BuildConfiguration * configuration, In
 
 bool Project::supportsKit(ProjectExplorer::Kit *k, QString *errorMessage) const
 {
-    if (!toolset::KitInformation::tool(k))
+    if (!toolset::KitInformation::cook_tool(k))
     {
         if(errorMessage)
             *errorMessage = tr("No Cook tool set.");
@@ -130,6 +136,16 @@ bool Project::needsConfiguration() const
 ProjectExplorer::Project::RestoreResult Project::fromMap(const QVariantMap &map, QString *errorMessage)
 {
     return ProjectExplorer::Project::fromMap(map, errorMessage);
+}
+
+bool Project::setupTarget(ProjectExplorer::Target *t)
+{
+    t->updateDefaultBuildConfigurations();
+    if (t->buildConfigurations().isEmpty())
+        return false;
+    t->updateDefaultDeployConfigurations();
+
+    return true;
 }
 
 void Project::generate_project_tree_()

@@ -3,7 +3,7 @@
 
 #include "qook/project/info/AsyncManager.hpp"
 #include "qook/project/BuildConfiguration.hpp"
-#include "qook/toolset/Tool.hpp"
+#include "qook/toolset/CookTool.hpp"
 #include <QtConcurrent>
 #include <coreplugin/messagemanager.h>
 
@@ -22,7 +22,7 @@ bool AsyncManager<Parser>::async_run_(const OptionsFunctor & get_options)
     {
         Request result;
         // try the tool
-        const toolset::Tool * tool = config_->tool();
+        const toolset::CookTool * tool = config_->tool();
         if(tool == nullptr || !tool->is_valid())
         {
             result.code = ToolFailed;

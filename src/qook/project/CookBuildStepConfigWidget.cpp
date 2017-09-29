@@ -45,8 +45,6 @@ QString CookBuildStepConfigWidget::displayName() const
 
 void CookBuildStepConfigWidget::build_targets_changed()
 {
-    qDebug() << "called";
-
     const bool was_locked = build_targets_->blockSignals(true);
     build_targets_->clear();
 

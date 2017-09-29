@@ -1,49 +1,68 @@
-//#include "qook/project/RunConfiguration.hpp"
-//#include "qook/project/Project.hpp"
-//#include <projectexplorer/localenvironmentaspect.h>
-//#include <projectexplorer/target.h>
-//#include <projectexplorer/runconfigurationaspects.h>
-//#include <projectexplorer/runnables.h>
+#include "qook/project/RunConfiguration.hpp"
+#include "qook/project/RunSettingsWidget.hpp"
+#include "qook/project/Project.hpp"
+#include <projectexplorer/localenvironmentaspect.h>
+#include <projectexplorer/target.h>
+#include <projectexplorer/runconfigurationaspects.h>
+#include <projectexplorer/runnables.h>
 
-//namespace qook { namespace project {
+namespace qook { namespace project {
 
-//namespace  {
+namespace  {
 
-//const char CMAKE_RC_PREFIX[] = "CookProjectManager.CookRunConfiguration.";
-//const char TITLE_KEY[] = "CookProjectManager.CookRunConfiguation.Title";
+const char CMAKE_RC_PREFIX[] = "CookProjectManager.CookRunConfiguration.";
+const char TITLE_KEY[] = "CookProjectManager.CookRunConfiguation.Title";
 
-//}
+}
 
-//RunConfiguration::RunConfiguration(ProjectExplorer::Target * parent, Core::Id id, const CookBuildTarget & target, const Utils::FileName &workingDirectory, const QString &title)
-//    : ProjectExplorer::RunConfiguration(parent, id),
-//      build_system_target_(target),
-//      executable_(target.executable.toString()),
-//      title_(title)
-//{
-//    addExtraAspect(new ProjectExplorer::LocalEnvironmentAspect(this, ProjectExplorer::LocalEnvironmentAspect::BaseEnvironmentModifier()));
-//    addExtraAspect(new ProjectExplorer::ArgumentsAspect(this, QStringLiteral("CookProjectManager.CookRunConfiguration.Arguments")));
-//    addExtraAspect(new ProjectExplorer::TerminalAspect(this, QStringLiteral("CookProjectManager.CookRunConfiguration.UseTerminal")));
+RunConfiguration::RunConfiguration(ProjectExplorer::Target * parent, Core::Id id, const CookBuildTarget & target)
+    : ProjectExplorer::RunConfiguration(parent, id),
+      target_(target)
+{
+    addExtraAspect(new ProjectExplorer::LocalEnvironmentAspect(this, ProjectExplorer::LocalEnvironmentAspect::BaseEnvironmentModifier()));
+    addExtraAspect(new ProjectExplorer::ArgumentsAspect(this, QStringLiteral("CookProjectManager.CookRunConfiguration.Arguments")));
+    addExtraAspect(new ProjectExplorer::TerminalAspect(this, QStringLiteral("CookProjectManager.CookRunConfiguration.UseTerminal")));
 
-//    auto wd = new ProjectExplorer::WorkingDirectoryAspect(this, QStringLiteral("CookProjectManager.CookRunConfiguration.UserWorkingDirectory"));
-//    wd->setDefaultWorkingDirectory(workingDirectory);
-//    addExtraAspect(wd);
+    auto wd = new ProjectExplorer::WorkingDirectoryAspect(this, QStringLiteral("CookProjectManager.CookRunConfiguration.UserWorkingDirectory"));
+    wd->setDefaultWorkingDirectory(parent->project()->projectDirectory());
+    addExtraAspect(wd);
 
-//    ctor();
-//}
+    ctor();
+}
 
-//RunConfiguration::RunConfiguration(ProjectExplorer::Target *parent, RunConfiguration *source)
-//    : ProjectExplorer::RunConfiguration(parent, source),
-//      build_system_target_(source->build_system_target_),
-//      title_(source->title())
-//{
-//    ctor();
-//}
+RunConfiguration::RunConfiguration(ProjectExplorer::Target *parent, RunConfiguration * source)
+    : ProjectExplorer::RunConfiguration(parent, source),
+      target_(source->target_)
+{
+    ctor();
+}
 
-//void RunConfiguration::ctor()
-//{
-//    setDefaultDisplayName(defaultDisplayName());
-//}
+void RunConfiguration::ctor()
+{
+    setDefaultDisplayName(default_display_name_());
+}
 
+QString RunConfiguration::default_display_name_() const
+{
+    if(target_.display_name.isEmpty())
+        return QString("undefined");
+
+    return target_.display_name;
+}
+
+
+ProjectExplorer::Runnable RunConfiguration::runnable() const
+{
+    ProjectExplorer::StandardRunnable r;
+
+    r.executable = target_.executable.toString();
+    r.commandLineArguments = extraAspect<ProjectExplorer::ArgumentsAspect>()->arguments();
+    r.workingDirectory = extraAspect<ProjectExplorer::WorkingDirectoryAspect>()->workingDirectory().toString();
+    r.environment = extraAspect<ProjectExplorer::LocalEnvironmentAspect>()->environment();
+    r.runMode = extraAspect<ProjectExplorer::TerminalAspect>()->runMode();
+
+    return r;
+}
 //ProjectExplorer::Runnable RunConfiguration::runnable() const
 //{
 //    ProjectExplorer::StandardRunnable r;
@@ -56,10 +75,10 @@
 //    return r;
 //}
 
-//QWidget * RunConfiguration::createConfigurationWidget()
-//{
-//    return nullptr;
-//}
+QWidget * RunConfiguration::createConfigurationWidget()
+{
+    return new RunSettingsWidget(this);
+}
 
 //void RunConfiguration::setExecutable(const QString &executable)
 //{
@@ -132,4 +151,4 @@
 
 
 
-//} }
+} }

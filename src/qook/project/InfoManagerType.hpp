@@ -9,7 +9,7 @@ enum InfoRequestType
 {
     Unknown = 0x00,
     Recipes = 0x01,
-    Detailed_Recipes = 0x02,
+    Build_Recipes = 0x02,
 };
 
 Q_DECLARE_FLAGS(RequestFlags, InfoRequestType)

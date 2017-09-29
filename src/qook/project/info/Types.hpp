@@ -2,8 +2,10 @@
 #define HEADER_qook_project_info_Types_hpp_ALREADY_INCLUDED
 
 #include <utils/fileutils.h>
+#include <coreplugin/id.h>
 #include <QString>
 #include <QVector>
+#include <QMap>
 
 namespace qook { namespace project { namespace info {
 
@@ -31,14 +33,14 @@ struct FileInfo
 struct Recipe
 {
     QString uri;
-    QString display_name;
+    QString name;
+
+    Core::Id to_id() const;
+    bool from_id(const Core::Id & id);
 };
 
-
-struct DetailedRecipe
+struct BuildRecipe : public Recipe
 {
-    QString uri;
-    QString display_name;
     Utils::FileName script;
     TargetType type;
     Utils::FileName build_target;
@@ -49,15 +51,26 @@ struct DetailedRecipe
 
 struct Recipes
 {
-    QVector<Recipe> recipes;
+    QMap<QString, Recipe> recipes;
     QString default_uri;
 };
 
-struct DetailedRecipes
+struct BuildRecipes
 {
-    QVector<DetailedRecipe> recipes;
+    QMap<QString, BuildRecipe> recipes;
     QString default_uri;
 };
+
+inline QString display_name(const Recipe & recipe)
+{
+    QString val = recipe.uri;
+
+    if (recipe.name.isEmpty())
+        val.append(QString(" (%1)").arg(recipe.name));
+
+    return val;
+}
+
 
 
 } } }

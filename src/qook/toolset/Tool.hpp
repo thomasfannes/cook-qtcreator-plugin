@@ -8,6 +8,9 @@
 
 namespace qook { namespace toolset {
 
+
+
+
 class Tool
 {
 public:
@@ -24,24 +27,26 @@ public:
         ManualSpecified
     };
 
-    Tool();
-    Tool(Detection d, const Core::Id & id);
+    Tool(const Core::Id & type_id);
+    Tool(const Core::Id & type_id, Detection d, const Core::Id & id);
+
+    virtual ~Tool() = default;
 
     static Core::Id generate_id();
-    static std::pair<QString, bool> test_cook_executable(const QFileInfo & exec_file);
-    static Tool * generate_from_map(const QVariantMap & map);
 
     bool is_auto_detected() const               { return d_ == AutoDetected; }
     bool is_valid() const                       { return is_valid_; }
-    bool is_default() const;
+    virtual bool is_default() const = 0;
     Version version() const                     { return version_; }
     const Core::Id & id() const                 { return id_; }
+    const Core::Id & type_id() const            { return type_id_; }
 
     const QString & display_name() const        { return display_name_; }
     const QFileInfo & exec_file() const         { return exe_file_; }
     QString user_file_name() const              { return exe_file_.absoluteFilePath(); }
 
-    QVariantMap to_map() const;
+    virtual QVariantMap to_map() const;
+    virtual bool from_map(const QVariantMap & map);
 
     void set_display_name(const QString & display_name);
     void set_exec_file(const QFileInfo & exec_file);
@@ -49,18 +54,20 @@ public:
     QString version_string() const;
     Utils::SynchronousProcessResponse run(const QStringList &args) const;
 
-private:
+protected:
     static Utils::SynchronousProcessResponse run_(const QFileInfo & exec, const QStringList &args);
-    static std::pair<Tool::Version, bool> get_version_(const QFileInfo & exec);
-    static QString version_string_(const Version & version, bool is_valid);
 
+private:
+    virtual std::pair<Tool::Version, bool> get_version_() const = 0;
     void extract_version_info_();
     void clear_test_settings_();
 
     Detection d_;
     QString display_name_;
     QFileInfo exe_file_;
+    Core::Id type_id_;
     Core::Id id_;
+
 
     bool is_valid_;
     Version version_;
@@ -70,6 +77,19 @@ private:
         bool did_run = false;
     };
     mutable RunDetails run_details;
+};
+
+class ToolFactoryInterface
+{
+public:
+    virtual ~ToolFactoryInterface() = default;
+
+    virtual Tool * construct() const = 0;
+    virtual Tool * construct(const Tool & rhs) const = 0;
+    virtual Tool * construct(Tool::Detection d, const Core::Id & id) const = 0;
+    virtual QString name() const = 0;
+
+    virtual QStringList executable_names() const = 0;
 };
 
 } }

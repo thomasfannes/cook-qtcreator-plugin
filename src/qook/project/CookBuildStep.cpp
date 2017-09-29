@@ -2,7 +2,7 @@
 #include "qook/project/CookBuildStepConfigWidget.hpp"
 #include "qook/project/BuildConfiguration.hpp"
 #include "qook/project/Project.hpp"
-#include "qook/toolset/Tool.hpp"
+#include "qook/toolset/CookTool.hpp"
 #include "qook/toolset/KitInformation.hpp"
 #include "qook/Constants.hpp"
 #include <projectexplorer/target.h>
@@ -102,7 +102,7 @@ ProjectExplorer::BuildStepConfigWidget * CookBuildStep::createConfigWidget()
 
 QList<CookBuildTarget> CookBuildStep::all_targets() const
 {
-    return build_configuration_()->all_targets();
+    return build_configuration_()->all_build_targets();
 }
 
 bool CookBuildStep::builds_target(const CookBuildTarget & target) const
@@ -197,7 +197,7 @@ bool CookBuildStep::configure_process_parameters_(ProjectExplorer::ProcessParame
         can_init = false;
     }
 
-    const toolset::Tool * tool = bc->tool();
+    const toolset::CookTool * tool = bc->tool();
     if(!tool)
     {
         emit addTask(ProjectExplorer::Task(ProjectExplorer::Task::Error, tr("A Cook tool must be set up for building. Configure a Cook tool in the kit options."), Utils::FileName(), -1, ProjectExplorer::Constants::TASK_CATEGORY_BUILDSYSTEM));

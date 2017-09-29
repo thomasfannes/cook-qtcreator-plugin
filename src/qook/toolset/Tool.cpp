@@ -1,5 +1,4 @@
 #include "qook/toolset/Tool.hpp"
-#include "qook/toolset/Manager.hpp"
 #include <utils/environment.h>
 #include <QRegularExpression>
 #include <QDebug>
@@ -16,14 +15,16 @@ const char COOK_INFO_AUTODETECTED[] = "AutoDetected";
 
 }
 
-Tool::Tool()
-    : d_(Detection::ManualSpecified),
+Tool::Tool(const Core::Id &type_id)
+    : type_id_(type_id),
+      d_(Detection::ManualSpecified),
       id_(generate_id())
 {
 }
 
-Tool::Tool(Detection d, const Core::Id & id)
-    : d_(d),
+Tool::Tool(const Core::Id & type_id, Detection d, const Core::Id & id)
+    : type_id_(type_id),
+      d_(d),
       id_(id),
       is_valid_(false)
 {
@@ -31,58 +32,24 @@ Tool::Tool(Detection d, const Core::Id & id)
         id_ = generate_id();
 }
 
-Tool * Tool::generate_from_map(const QVariantMap & map)
-{
-    Core::Id id = Core::Id::fromSetting(map.value(COOK_INFO_ID));
-
-    if (!id.isValid())
-        return 0;
-
-    bool auto_detected = map.value(COOK_INFO_AUTODETECTED, false).toBool();
-    Tool * tool = new Tool(auto_detected ? AutoDetected : ManualSpecified, id);
-
-    tool->display_name_ = map.value(COOK_INFO_DISPLAYNAME).toString();
-    tool->exe_file_ = QFileInfo(map.value(COOK_INFO_CMD).toString());
-    tool->extract_version_info_();
-
-    return tool;
-}
-
-bool Tool::is_default() const
-{
-    return id_.isValid() && Manager::instance()->default_tool_id() == id_;
-}
 
 Core::Id Tool::generate_id()
 {
     return Core::Id::fromString(QUuid::createUuid().toString());
 }
 
-std::pair<Tool::Version, bool> Tool::get_version_(const QFileInfo & exec)
+bool Tool::from_map(const QVariantMap & map)
 {
-    Utils::SynchronousProcessResponse respons = run_(exec, {"-h"});
-    if (respons.result == Utils::SynchronousProcessResponse::Finished)
-    {
-        QRegularExpression re("cook version (\\d+).(\\d+).(\\d+)");
-        QRegularExpressionMatch match = re.match(respons.stdOut());
+    id_ = Core::Id::fromSetting(map.value(COOK_INFO_ID));
+    if (!id_.isValid())
+        return false;
 
-        if(match.hasMatch())
-        {
-            Version version;
-            bool success = true;
+    d_ = map.value(COOK_INFO_AUTODETECTED, false).toBool() ? AutoDetected : ManualSpecified;
+    display_name_ = map.value(COOK_INFO_DISPLAYNAME).toString();
+    exe_file_ = QFileInfo(map.value(COOK_INFO_CMD).toString());
 
-            if (success)
-                version.major = match.captured(1).toInt(&success);
-            if (success)
-                version.minor = match.captured(2).toInt(&success);
-            if (success)
-                version.patch = match.captured(3).toInt(&success);
-
-            return std::make_pair(version, success);
-        }
-    }
-
-    return std::make_pair(Version(), false);
+    extract_version_info_();
+    return true;
 }
 
 QVariantMap Tool::to_map() const
@@ -96,30 +63,18 @@ QVariantMap Tool::to_map() const
     return data;
 }
 
-std::pair<QString, bool> Tool::test_cook_executable(const QFileInfo & exec_file)
-{
-    std::pair<Tool::Version, bool> res = get_version_(exec_file);
-    return std::make_pair(version_string_(res.first, res.second), res.second);
-}
-
-QString Tool::version_string_(const Version & version, bool is_valid)
-{
-    if(is_valid)
-        return QString("%1.%2.%3").arg(version.major).arg(version.minor).arg(version.patch);
-    else
-        return QString("<invalid>");
-}
-
-
 QString Tool::version_string() const
 {
-    return version_string_(version_, is_valid_);
+    if(is_valid_)
+        return QString("%1.%2.%3").arg(version_.major).arg(version_.minor).arg(version_.patch);
+    else
+        return QString("<invalid>");
 }
 
 void Tool::extract_version_info_()
 {
     clear_test_settings_();
-    std::pair<Tool::Version, bool> respons = get_version_(exe_file_);
+    std::pair<Tool::Version, bool> respons = get_version_();
 
     version_ = respons.first;
     is_valid_ = respons.second;

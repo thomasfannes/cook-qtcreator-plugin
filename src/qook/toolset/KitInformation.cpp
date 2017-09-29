@@ -1,6 +1,8 @@
 #include "qook/toolset/KitInformation.hpp"
 #include "qook/toolset/KitConfigWidget.hpp"
 #include "qook/toolset/Tool.hpp"
+#include "qook/toolset/NinjaTool.hpp"
+#include "qook/toolset/CookTool.hpp"
 #include "qook/toolset/Manager.hpp"
 #include <projectexplorer/kitmanager.h>
 #include <utils/qtcassert.h>
@@ -10,19 +12,16 @@ namespace qook { namespace toolset {
 
 namespace  {
 
-Core::Id default_cook_tool_id()
-{
-    return Manager::instance()->default_tool_id();
-}
-
-const char TOOL_ID[] = "CookProjectManager.CookKitInformation";
+Core::Id type_to_kit_id(const Core::Id & type_id) { return type_id.withPrefix("CookProjectManager.CookKitInformation."); }
 
 }
 
-KitInformation::KitInformation()
+KitInformation::KitInformation(const Core::Id & type_id, const QString & name)
+    : type_id_(type_id),
+      name_(name)
 {
     setObjectName(QLatin1String("CookKitInformation"));
-    setId(TOOL_ID);
+    setId(type_to_kit_id(type_id_));
     setPriority(20001);
 
     auto fix_kits = [this]()
@@ -35,20 +34,59 @@ KitInformation::KitInformation()
     connect(Manager::instance(), &Manager::tool_added, fix_kits);
 }
 
-Core::Id KitInformation::id()
+const Tool * KitInformation::get_tool(const ProjectExplorer::Kit * k) const
 {
-    return TOOL_ID;
+    return get_tool(type_id_, k);
 }
 
-const Tool * KitInformation::tool(const ProjectExplorer::Kit *k)
+const Tool * KitInformation::get_tool(const Core::Id & type_id, const ProjectExplorer::Kit * k)
 {
+    const QVariant tool_id = k->value(type_to_kit_id(type_id));
+    return Manager::instance()->find_registered_tool(Core::Id::fromSetting(tool_id));
+}
+
+bool KitInformation::set_tool(const Core::Id & tool_id, ProjectExplorer::Kit * k) const
+{
+    return set_tool(type_id_, tool_id, k);
+}
+
+bool KitInformation::set_tool(const Core::Id &type_id, const Core::Id & tool_id, ProjectExplorer::Kit * k)
+{
+    const Core::Id & to_set = tool_id.isValid() ? tool_id : Manager::instance()->default_tool_id(type_id);
+
+    if(!to_set.isValid())
+        return false;
+
+    const Tool * tool = Manager::instance()->find_registered_tool(to_set);
+    if(tool == nullptr || tool->type_id() != type_id)
+        return false;
+
     if(!k)
-        return nullptr;
+        return false;
 
-    Manager * mgr = Manager::instance();
+    k->setValue(type_to_kit_id(type_id), to_set.toSetting());
+    return true;
+}
 
-    const QVariant id = k->value(TOOL_ID);
-    return mgr->find_registered_tool(Core::Id::fromSetting(id));
+
+const CookTool * KitInformation::cook_tool(const ProjectExplorer::Kit *k)
+{
+    return dynamic_cast<const CookTool *>(get_tool(CookTool::type_id(), k));
+}
+
+const NinjaTool *KitInformation::ninja_tool(const ProjectExplorer::Kit *k)
+{
+    return dynamic_cast<const NinjaTool *>(get_tool(NinjaTool::type_id(), k));
+}
+
+bool KitInformation::set_cook_tool(ProjectExplorer::Kit *k, const Core::Id & id)
+{
+    return set_tool(CookTool::type_id(), id, k);
+}
+
+bool KitInformation::set_ninja_tool(ProjectExplorer::Kit *k, const Core::Id & id)
+{
+    return set_tool(NinjaTool::type_id(), id, k);
 }
 
 void KitInformation::upgrade(ProjectExplorer::Kit * k)
@@ -57,60 +95,53 @@ void KitInformation::upgrade(ProjectExplorer::Kit * k)
     fix(k);
 }
 
-void KitInformation::set_tool(ProjectExplorer::Kit *k, const Core::Id & id)
-{
-    const Core::Id & to_set = id.isValid() ? id : default_cook_tool_id();
-    QTC_ASSERT(!to_set.isValid() || Manager::instance()->find_registered_tool(to_set), return );
-
-    if (k) k->setValue(TOOL_ID, to_set.toSetting());
-}
-
 QVariant KitInformation::defaultValue(const ProjectExplorer::Kit *k) const
 {
-    const Core::Id id = k ? default_cook_tool_id() : Core::Id();
+    const Core::Id id = k ? Manager::instance()->default_tool_id(type_id_) : Core::Id();
     return id.toSetting();
 }
 
-QList<ProjectExplorer::Task> KitInformation::validate(const ProjectExplorer::Kit *k) const
+QList<ProjectExplorer::Task> KitInformation::validate(const ProjectExplorer::Kit * /*k*/) const
 {
     return {};
 }
 
 void KitInformation::setup(ProjectExplorer::Kit *k)
 {
-    const Tool * tool = KitInformation::tool(k);
+    const Tool * tool = get_tool(k);
+
     if (!tool)
-        set_tool(k, default_cook_tool_id());
+        set_tool(Manager::instance()->default_tool_id(type_id_), k);
 }
 
 void KitInformation::fix(ProjectExplorer::Kit *k)
 {
-    if (!KitInformation::tool(k))
+    if (!KitInformation::cook_tool(k) || !KitInformation::ninja_tool(k))
         setup(k);
 }
 
 KitInformation::ItemList KitInformation::toUserOutput(const ProjectExplorer::Kit *k) const
 {
-    const Tool * const t = tool(k);
-    return ItemList() << qMakePair(tr("Cook"), t == 0 ? tr("Unconfigured") : t->display_name());
+    const Tool * tool = get_tool(k);
+    return ItemList() << qMakePair(name_, tool == 0 ? tr("Unconfigured") : tool->display_name());
 }
 
 ProjectExplorer::KitConfigWidget * KitInformation::createConfigWidget(ProjectExplorer::Kit *k) const
 {
-    return new KitConfigWidget(k, this);
+    return new KitConfigWidget(k, this, type_id_, name_);
 }
 
 void KitInformation::addToMacroExpander(ProjectExplorer::Kit *k, Utils::MacroExpander *expander) const
 {
-    expander->registerFileVariables("Cook:Executable", tr("Path to the cook executable"),
-                                    [this, k]()
+    QString name = QString("%1:Executable").arg(name_);
+    expander->registerFileVariables(name.toLatin1(), QString("Path to the %1 executable").arg(name_), [this, k]()
     {
-        const Tool * tool = KitInformation::tool(k);
+        const Tool * tool = get_tool(k);
         return tool ? tool->user_file_name() : QString();
     });
 }
 
-QSet<Core::Id> KitInformation::availableFeatures(const ProjectExplorer::Kit *k) const
+QSet<Core::Id> KitInformation::availableFeatures(const ProjectExplorer::Kit */*k*/) const
 {
     return {};
 }

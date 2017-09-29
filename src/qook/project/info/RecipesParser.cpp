@@ -29,10 +29,10 @@ void RecipesParser::initialize_(ParserInternal<Recipes, RecipesParser> & p, Reci
 {
     RootElement<Recipes> * root = new RootElement<Recipes>(value, tag_recipes);
     {
-        FSE<Recipe> & c = root->node<Recipe>(tag_recipe, [](auto & l, const auto & r) {l.recipes.append(r); });
+        FSE<Recipe> & c = root->node<Recipe>(tag_recipe, [](auto & l, const auto & r) {l.recipes.insert(r.uri, r); });
         {
             c.attribute(key_uri, [](auto & l, const auto & r) { l.uri = QString::fromStdString(r); });
-            c.composite_attribute(key_display_name, [](auto & l, const auto & r) { l.display_name = QString::fromStdString(r); });
+            c.composite_attribute(key_display_name, [](auto & l, const auto & r) { l.name = QString::fromStdString(r); });
         }
     }
 

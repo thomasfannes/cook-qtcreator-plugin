@@ -1,17 +1,18 @@
 #include "qook/toolset/ConfigItemModel.hpp"
 #include "qook/toolset/ConfigItem.hpp"
 #include "qook/toolset/Manager.hpp"
-#include "qook/toolset/Tool.hpp"
 #include <QUuid>
 #include <utils/qtcassert.h>
 
 namespace qook { namespace toolset {
 
-ConfigItemModel::ConfigItemModel(QObject *parent)
-    : Utils::TreeModel<Utils::TreeItem, Utils::TreeItem, ConfigItem>(parent)
+ConfigItemModel::ConfigItemModel(const Core::Id & type_id, QObject *parent)
+    : Utils::TreeModel<Utils::TreeItem, Utils::TreeItem, ConfigItem>(parent),
+      type_id_(type_id)
 {
     Manager * mgr = Manager::instance();
-    default_item_id_ = mgr->default_tool_id();
+    factory_ = mgr->factory(type_id_);
+    default_item_id_ = mgr->default_tool_id(type_id);
 
     setHeader({ tr("Name"), tr("Location"), tr("Version") });
     rootItem()->appendChild(new Utils::StaticTreeItem(tr("Auto-detected")));
@@ -19,24 +20,29 @@ ConfigItemModel::ConfigItemModel(QObject *parent)
 
     // add the existing item
     for(const Tool * tool: mgr->registered_tools())
-        add_tool(tool);
+        if(tool->type_id() == type_id_)
+            add_tool(tool);
 
     // connect the signals
     connect(mgr, &Manager::tool_removed, this, &ConfigItemModel::remove_tool);
     connect(mgr, &Manager::tool_added, this, [this, mgr](const Core::Id & id) { add_tool(mgr->find_registered_tool(id)); });
-    connect(mgr, &Manager::default_tool_changed, this, [this, mgr]() { set_default_item_id(mgr->default_tool_id()); });
+    connect(mgr, &Manager::default_tool_changed, this, [this, mgr]() { set_default_item_id(mgr->default_tool_id(type_id_)); });
 }
 
 ConfigItem * ConfigItemModel::add_tool(const Tool * tool)
 {
     QTC_ASSERT(tool, return nullptr);
+    QTC_ASSERT(factory_, return nullptr);
+
+    if(tool->type_id() != type_id_)
+        return nullptr;
 
     // already an item with this id?
     ConfigItem * item = find_item(tool->id());
     if(item)
         return item;
 
-    item = new ConfigItem(tool);
+    item = new ConfigItem(factory_, tool);
     (tool->is_auto_detected() ? auto_group_item() : manual_group_item())->appendChild(item);
 
     return item;
@@ -44,7 +50,8 @@ ConfigItem * ConfigItemModel::add_tool(const Tool * tool)
 
 ConfigItem * ConfigItemModel::add_tool(const QString & displayName, const QFileInfo & executable)
 {
-    ConfigItem * item = new ConfigItem();
+    QTC_ASSERT(factory_, return nullptr);
+    ConfigItem * item = new ConfigItem(factory_);
     item->tool().set_display_name(displayName);
     item->tool().set_exec_file(executable);
     manual_group_item()->appendChild(item);
@@ -114,7 +121,7 @@ void ConfigItemModel::apply()
     to_remove_.clear();
 
     // update the default item (if changed)
-    if(default_item_id() != mgr->default_tool_id())
+    if(default_item_id() != mgr->default_tool_id(type_id_))
         mgr->set_default_tool(default_item_id());
 
 

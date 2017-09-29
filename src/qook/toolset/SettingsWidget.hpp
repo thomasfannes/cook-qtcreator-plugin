@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QFileInfo>
 #include <QTreeWidgetItem>
+#include <coreplugin/id.h>
 
 namespace qook { namespace toolset {
 
@@ -21,7 +22,7 @@ class SettingsWidget : public QWidget
     Q_OBJECT
 
 public:
-    explicit SettingsWidget(QWidget *parent = 0);
+    explicit SettingsWidget(const Core::Id & type_id, const QString & name);
     ~SettingsWidget();
 
     ConfigItemModel * model() { return model_; }
@@ -41,6 +42,8 @@ private:
     Ui::SettingsWidget *ui;
     ConfigItemModel * model_;
     ConfigItem * selected_;
+    Core::Id type_id_;
+    QString name_;
 };
 
 } }

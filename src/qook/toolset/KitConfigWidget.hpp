@@ -9,9 +9,8 @@ namespace qook { namespace toolset {
 
 class KitConfigWidget : public ProjectExplorer::KitConfigWidget
 {
-    Q_OBJECT
 public:
-    KitConfigWidget(ProjectExplorer::Kit *kit, const ProjectExplorer::KitInformation *ki);
+    KitConfigWidget(ProjectExplorer::Kit *kit, const ProjectExplorer::KitInformation *ki, const Core::Id & type_id, const QString & name);
     ~KitConfigWidget() override;
 
     // KitConfigWidget interface
@@ -34,6 +33,8 @@ private:
     bool removing_item = false;
     QComboBox * combo_box_;
     QPushButton * manage_btn_;
+    const Core::Id type_id_;
+    const QString & name_;
 };
 
 } }

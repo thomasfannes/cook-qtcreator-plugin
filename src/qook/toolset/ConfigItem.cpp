@@ -1,6 +1,5 @@
 #include "qook/toolset/ConfigItem.hpp"
 #include "qook/toolset/ConfigItemModel.hpp"
-#include "qook/toolset/Manager.hpp"
 #include <QVariant>
 #include <QDebug>
 #include <QFont>
@@ -8,15 +7,25 @@
 
 namespace qook { namespace toolset {
 
-ConfigItem::ConfigItem()
-    : original_tool_(0)
+
+ConfigItem::ConfigItem(const ToolFactoryInterface * factory)
+    : tool_(factory->construct()),
+      original_tool_(nullptr),
+      factory_(factory)
 {
 }
 
-ConfigItem::ConfigItem(const Tool * tool)
-    : tool_(tool ? *tool : Tool()),
-      original_tool_(tool)
+ConfigItem::ConfigItem(const ToolFactoryInterface * factory, const Tool * tool)
+    : tool_(tool ? factory->construct(*tool) : factory->construct()),
+      original_tool_(tool),
+      factory_(factory)
 {
+
+}
+
+ConfigItem::~ConfigItem()
+{
+    delete tool_;
 }
 
 QVariant ConfigItem::data(int column, int role) const
@@ -28,15 +37,15 @@ QVariant ConfigItem::data(int column, int role) const
         {
         // the name column
         case 0:
-            return is_default() ? QString("%1 (default)").arg(tool_.display_name()) : tool_.display_name();
+            return is_default() ? QString("%1 (default)").arg(tool().display_name()) : tool().display_name();
 
         // the location column
         case 1:
-            return tool_.user_file_name();
+            return tool().user_file_name();
 
         // the version column
         case 2:
-            return tool_.version_string();
+            return tool().version_string();
 
         default:
             return QVariant();
@@ -52,7 +61,7 @@ QVariant ConfigItem::data(int column, int role) const
 
     case Qt::ForegroundRole:
     {
-        if (!tool_.is_valid())
+        if (!tool().is_valid())
             return QBrush(Qt::red);
         else
             return TreeItem::data(column, role);
@@ -70,14 +79,14 @@ ConfigItemModel * ConfigItem::model() const
 
 bool ConfigItem::is_default() const
 {
-    return tool_.id() == model()->default_item_id();
+    return tool().id() == model()->default_item_id();
 }
 
 bool ConfigItem::has_changed() const
 {
     return original_tool_ == 0
-                    || tool_.display_name() != original_tool_->display_name()
-                    || tool_.exec_file() != original_tool_->exec_file()
+                    || tool().display_name() != original_tool_->display_name()
+                    || tool().exec_file() != original_tool_->exec_file()
                     || is_default() != original_tool_->is_default();
 }
 

@@ -23,7 +23,7 @@ private:
 class RecipeNode : public ProjectExplorer::ProjectNode
 {
 public:
-    explicit RecipeNode(const info::DetailedRecipe & recipe);
+    explicit RecipeNode(const info::BuildRecipe & recipe);
 
     void compress();
 };

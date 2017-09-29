@@ -1,4 +1,4 @@
-#include "qook/project/info/DetailedRecipesParser.hpp"
+#include "qook/project/info/BuildRecipesParser.hpp"
 #include "qook/project/info/Parser.hxx"
 #include "gubg/parse/polymorphic_tree/FixedStructure.hpp"
 #include "gubg/parse/polymorphic_tree/RootElement.hpp"
@@ -56,17 +56,16 @@ Utils::FileName convert_file_name(const std::string & v)
 using namespace gubg::parse::polymorphic_tree;
 template <typename T> using FSE = FixedStructureElement<T>;
 
-template bool Parser<DetailedRecipes, DetailedRecipesParser>::parse(DetailedRecipes & info, const QByteArray & input);
+template bool Parser<BuildRecipes, BuildRecipesParser>::parse(BuildRecipes & info, const QByteArray & input);
 
-void DetailedRecipesParser::initialize_(ParserInternal<DetailedRecipes, DetailedRecipesParser> &p, DetailedRecipes &value)
+void BuildRecipesParser::initialize_(ParserInternal<BuildRecipes, BuildRecipesParser> &p, BuildRecipes &value)
 {
-    RootElement<DetailedRecipes> * root = new RootElement<DetailedRecipes>(value, tag_details);
-
+    RootElement<BuildRecipes> * root = new RootElement<BuildRecipes>(value, tag_details);
     {
-        FSE<DetailedRecipe> & c = root->composite_node<DetailedRecipe>(tag_recipe, [](auto & l, const auto & r) { l.recipes.append(r); });
+        FSE<BuildRecipe> & c = root->composite_node<BuildRecipe>(tag_recipe, [](auto & l, const auto & r) { l.recipes.insert(r.uri, r); });
         {
             c.attribute(key_uri,            [](auto & l, const auto & r) { l.uri = QString::fromStdString(r); });
-            c.attribute(key_display_name,   [](auto & l, const auto & r) { l.display_name = QString::fromStdString(r); });
+            c.attribute(key_display_name,   [](auto & l, const auto & r) { l.name = QString::fromStdString(r); });
             c.attribute(key_script,         [](auto & l, const auto & r) { l.script = convert_file_name(r); });
             c.attribute(key_type,           [](auto & l, const auto & r) { l.type = convert_target_type(r); });
             c.attribute(key_build_target,   [](auto & l, const auto & r) { l.build_target = convert_file_name(r); });

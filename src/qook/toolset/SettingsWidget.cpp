@@ -2,7 +2,7 @@
 #include "qook/toolset/Manager.hpp"
 #include "qook/toolset/ConfigItemModel.hpp"
 #include "qook/toolset/ConfigItem.hpp"
-#include "qook/toolset/Tool.hpp"
+#include "qook/toolset/CookTool.hpp"
 
 #include "ui_SettingsWidget.h"
 #include <QFileDialog>
@@ -17,14 +17,15 @@
 
 namespace qook { namespace toolset {
 
-SettingsWidget::SettingsWidget(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::SettingsWidget),
-    selected_(0)
+SettingsWidget::SettingsWidget(const Core::Id &type_id, const QString & name)
+    : ui(new Ui::SettingsWidget),
+        selected_(0),
+        type_id_(type_id),
+        name_(name)
 {
     ui->setupUi(this);
 
-    model_ = new ConfigItemModel(this);
+    model_ = new ConfigItemModel(type_id_, this);
     ui->overview->setModel(model_);
 
     ui->overview->header()->setSectionResizeMode(0, QHeaderView::Stretch);
@@ -80,7 +81,7 @@ void SettingsWidget::on_btnBrowse_clicked()
 {
     QTC_ASSERT(selected_, return);
 
-    QString file = QFileDialog::getOpenFileName(nullptr, "Cook executable", selected_->tool().exec_file().absoluteFilePath());
+    QString file = QFileDialog::getOpenFileName(nullptr, QString("%1 executable").arg(name_), selected_->tool().exec_file().absoluteFilePath());
     if (!file.isNull())
     {
         selected_->tool().set_exec_file(QFileInfo(file));

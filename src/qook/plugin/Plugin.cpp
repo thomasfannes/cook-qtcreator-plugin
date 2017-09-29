@@ -2,15 +2,16 @@
 #include "qook/chai/editor/Editor.hpp"
 #include "qook/toolset/Settings.hpp"
 #include "qook/toolset/Manager.hpp"
+#include "qook/toolset/NinjaTool.hpp"
+#include "qook/toolset/CookTool.hpp"
 #include "qook/toolset/KitInformation.hpp"
 #include "qook/project/Project.hpp"
 #include "qook/project/BuildConfigurationFactory.hpp"
+#include "qook/project/RunConfigurationFactory.hpp"
 #include "qook/project/CookBuildStepFactory.hpp"
 #include "qook/project/NinjaBuildStepFactory.hpp"
-
 #include "qook/ProjectWizard.hpp"
 #include "qook/Constants.hpp"
-
 #include <coreplugin/icore.h>
 #include <coreplugin/icontext.h>
 #include <coreplugin/actionmanager/actionmanager.h>
@@ -57,14 +58,35 @@ bool Plugin::initialize(const QStringList &arguments, QString *errorString)
     ProjectExplorer::ProjectManager::registerProjectType<project::Project>(qook::constants::QOOK_MIME_TYPE);
 //    Core::IWizardFactory::registerFactoryCreator([]() { return QList<Core::IWizardFactory *>() << new ProjectWizardFactory; });
 
+
     qook::toolset::Manager::create_instance(this);
-    ProjectExplorer::KitManager::registerKitInformation(new qook::toolset::KitInformation);
+
+    // the cook tools
+    {
+        const Core::Id & type_id = toolset::CookTool::type_id();
+        const QString name = "cook";
+
+        qook::toolset::Manager::instance()->register_factory(type_id, new toolset::CookFactory);
+        ProjectExplorer::KitManager::registerKitInformation(new qook::toolset::KitInformation(type_id, name));
+        addAutoReleasedObject(new toolset::Settings(type_id, name));
+    }
+
+    // the ninja tools
+    {
+        const Core::Id & type_id = toolset::NinjaTool::type_id();
+        const QString name = "ninja";
+
+        qook::toolset::Manager::instance()->register_factory(type_id, new toolset::NinjaFactory);
+        ProjectExplorer::KitManager::registerKitInformation(new qook::toolset::KitInformation(type_id, name));
+        addAutoReleasedObject(new toolset::Settings(type_id, name));
+    }
+
 
     addAutoReleasedObject(new chai::editor::EditorFactory);
-    addAutoReleasedObject(new toolset::Settings);
     addAutoReleasedObject(new project::CookBuildStepFactory);
     addAutoReleasedObject(new project::NinjaBuildStepFactory);
     addAutoReleasedObject(new project::BuildConfigurationFactory);
+    addAutoReleasedObject(new project::RunConfigurationFactory);
 
 
     /*auto action = new QAction(tr("QookPlugin Action"), this);

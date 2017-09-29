@@ -9,12 +9,12 @@ namespace qook { namespace toolset {
 
 class Tool;
 class ConfigItem;
-class Manager;
+class ToolFactoryInterface;
 
 class ConfigItemModel : public Utils::TreeModel<Utils::TreeItem, Utils::TreeItem, ConfigItem>
 {
 public:
-    explicit ConfigItemModel(QObject * parent);
+    explicit ConfigItemModel(const Core::Id & type_id, QObject * parent);
 
     ConfigItem * add_tool(const Tool *tool);
     ConfigItem * add_tool(const QString & displayName, const QFileInfo & executable);
@@ -37,6 +37,8 @@ private:
 
     Core::Id default_item_id_;
     QList<Core::Id> to_remove_;
+    const Core::Id type_id_;
+    const ToolFactoryInterface * factory_;
 };
 
 } }

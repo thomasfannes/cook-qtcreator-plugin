@@ -22,12 +22,15 @@ SOURCES += \
     src/qook/chai/editor/Indenter.cpp \
     src/qook/chai/editor/Editor.cpp \
     src/qook/toolset/SettingsWidget.cpp \
-    src/qook/toolset/Settings.cpp \
-    src/qook/toolset/Tool.cpp \
-    src/qook/toolset/Manager.cpp \
     src/qook/toolset/ConfigItemModel.cpp \
     src/qook/toolset/ConfigItem.cpp \
     src/qook/toolset/KitInformation.cpp \
+    src/qook/toolset/Tool.cpp \
+    src/qook/toolset/CookTool.cpp \
+    src/qook/toolset/CookManager.cpp \
+    src/qook/toolset/NinjaTool.cpp \
+    src/qook/toolset/Settings.cpp \
+    src/qook/toolset/Manager.cpp \
     src/qook/toolset/KitConfigWidget.cpp \
     src/qook/project/Project.cpp \
     src/qook/project/BuildConfiguration.cpp \
@@ -46,8 +49,10 @@ SOURCES += \
     src/qook/project/info/RecipesParser.cpp \
     src/qook/project/info/RecipesManager.cpp \
     src/qook/project/InfoManager.cpp \
-    src/qook/project/info/DetailedRecipesManager.cpp \
-    src/qook/project/info/DetailedRecipesParser.cpp
+    src/qook/project/info/BuildRecipesManager.cpp \
+    src/qook/project/info/BuildRecipesParser.cpp \
+    src/qook/project/info/Types.cpp
+
 
 
 HEADERS += \
@@ -63,12 +68,14 @@ HEADERS += \
     src/qook/chai/editor/Editor.hpp \
     src/qook/toolset/SettingsWidget.hpp \
     src/qook/toolset/Settings.hpp \
-    src/qook/toolset/Tool.hpp \
-    src/qook/toolset/Manager.hpp \
     src/qook/toolset/ConfigItemModel.hpp \
     src/qook/toolset/ConfigItem.hpp \
     src/qook/toolset/KitInformation.hpp \
     src/qook/toolset/KitConfigWidget.hpp \
+    src/qook/toolset/Tool.hpp \
+    src/qook/toolset/CookTool.hpp \
+    src/qook/toolset/NinjaTool.hpp \
+    src/qook/toolset/Manager.hpp \
     src/qook/project/Project.hpp \
     src/qook/project/BuildConfiguration.hpp \
     src/qook/project/ProjectNodes.hpp \
@@ -92,11 +99,10 @@ HEADERS += \
     src/qook/project/info/Parser.hpp \
     src/qook/project/info/Parser.hxx \
     src/qook/project/InfoManager.hpp \
-    src/qook/project/info/DetailedRecipesManager.hpp \
-    src/qook/project/info/DetailedRecipesParser.hpp \
-    gubg.extra/src/gubg/parse/polymorphic_tree/RootElement.hpp \
     src/qook/project/InfoManagerType.hpp \
-    src/qook/project/ParseRequestRun.hpp
+    src/qook/project/ParseRequestRun.hpp \
+    src/qook/project/info/BuildRecipesManager.hpp \
+    src/qook/project/info/BuildRecipesParser.hpp
 
 
 

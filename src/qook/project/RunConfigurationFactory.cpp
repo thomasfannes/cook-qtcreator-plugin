@@ -1,104 +1,130 @@
-//#include "qook/project/RunConfigurationFactory.hpp"
-//#include "qook/project/BuildConfiguration.hpp"
-//#include "qook/project/Project.hpp"
-//#include <projectexplorer/target.h>
+#include "qook/project/RunConfigurationFactory.hpp"
+#include "qook/project/RunConfiguration.hpp"
+#include "qook/project/BuildConfiguration.hpp"
+#include "qook/project/Project.hpp"
+#include <projectexplorer/target.h>
 
-//namespace qook { namespace project {
-
-//namespace {
-
-//const char COOK_RC_PREFIX[] = "CookProjectManager.CookRunConfiguration.";
-
-//}
-
-//RunConfigurationFactory::RunConfigurationFactory(QObject *parent) :
-//    ProjectExplorer::IRunConfigurationFactory(parent)
-//{
-//    setObjectName(QLatin1String("CookRunConfigurationFactory"));
-//}
-
-//// used to show the list of possible additons to a project, returns a list of ids
-//QList<Core::Id> RunConfigurationFactory::availableCreationIds(ProjectExplorer::Target *parent, CreationMode mode) const
-//{
-//    Q_UNUSED(mode)
-//    if (!canHandle(parent))
-//        return QList<Core::Id>();
-
-//    BuildConfiguration * bc = static_cast<BuildConfiguration *>(parent->activeBuildConfiguration());
-//    QList<Core::Id> allIds;
-//    for(const CookBuildTarget & tgt : bc->registered_targets())
-//        allIds << idFromBuildTarget(tgt.uri);
-
-//    return allIds;
-//}
-
-//// used to translate the ids to names to display to the user
-//QString RunConfigurationFactory::displayNameForId(Core::Id id) const
-//{
-//    return buildTargetFromId(id);
-//}
-
-//bool RunConfigurationFactory::canHandle(ProjectExplorer::Target *parent) const
-//{
-//    if (!parent->project()->supportsKit(parent->kit()))
-//        return false;
-//    return qobject_cast<Project *>(parent->project());
-//}
-
-//bool RunConfigurationFactory::canCreate(ProjectExplorer::Target *parent, Core::Id id) const
-//{
-//    if (!canHandle(parent))
-//        return false;
-//    Project *project = static_cast<Project *>(parent->project());
-//    return project->
-//            hasBuildTarget(buildTargetFromId(id));
-//}
-
-////RunConfiguration *CMakeRunConfigurationFactory::doCreate(Target *parent, Core::Id id)
-////{
-////    CMakeProject *project = static_cast<CMakeProject *>(parent->project());
-////    const QString title(buildTargetFromId(id));
-////    const CMakeBuildTarget &ct = project->buildTargetForTitle(title);
-////    return new CMakeRunConfiguration(parent, id, title, ct.workingDirectory, ct.title);
-////}
-
-////bool CMakeRunConfigurationFactory::canClone(Target *parent, RunConfiguration *source) const
-////{
-////    if (!canHandle(parent))
-////        return false;
-////    return source->id().name().startsWith(CMAKE_RC_PREFIX);
-////}
-
-////RunConfiguration *CMakeRunConfigurationFactory::clone(Target *parent, RunConfiguration * source)
-////{
-////    if (!canClone(parent, source))
-////        return 0;
-////    CMakeRunConfiguration *crc(static_cast<CMakeRunConfiguration *>(source));
-////    return new CMakeRunConfiguration(parent, crc);
-////}
-
-////bool CMakeRunConfigurationFactory::canRestore(Target *parent, const QVariantMap &map) const
-////{
-////    if (!qobject_cast<CMakeProject *>(parent->project()))
-////        return false;
-////    return idFromMap(map).name().startsWith(CMAKE_RC_PREFIX);
-////}
-
-////RunConfiguration *CMakeRunConfigurationFactory::doRestore(Target *parent, const QVariantMap &map)
-////{
-////    const Core::Id id = idFromMap(map);
-////    return new CMakeRunConfiguration(parent, id, buildTargetFromId(id), Utils::FileName(), QString());
-////}
-
-//QString RunConfigurationFactory::buildTargetFromId(Core::Id id)
-//{
-//    return id.suffixAfter(COOK_RC_PREFIX);
-//}
-
-//Core::Id RunConfigurationFactory::idFromBuildTarget(const QString &target)
-//{
-//    return Core::Id(COOK_RC_PREFIX).withSuffix(target);
-//}
+namespace qook { namespace project {
 
 
-////} }
+RunConfigurationFactory::RunConfigurationFactory(QObject *parent) :
+    ProjectExplorer::IRunConfigurationFactory(parent)
+{
+    setObjectName(QLatin1String("CookRunConfigurationFactory"));
+}
+
+bool RunConfigurationFactory::canCreate(ProjectExplorer::Target *parent, Core::Id id) const
+{
+    return can_handle(parent) && find_recipe_(parent, id);
+}
+
+bool RunConfigurationFactory::canClone(ProjectExplorer::Target *parent, ProjectExplorer::RunConfiguration *source) const
+{
+    return can_handle(parent) && qobject_cast<RunConfiguration*>(source) && find_recipe_(parent, source->id());
+}
+
+
+bool RunConfigurationFactory::canRestore(ProjectExplorer::Target *parent, const QVariantMap &map) const
+{
+    if (!qobject_cast<Project *>(parent->project()) && !qobject_cast<BuildConfiguration *>(parent->activeBuildConfiguration()))
+        return false;
+
+    return safe_to_recipe_(ProjectExplorer::idFromMap(map)).second;
+}
+
+ProjectExplorer::RunConfiguration * RunConfigurationFactory::clone(ProjectExplorer::Target *parent, ProjectExplorer::RunConfiguration * source)
+{
+    if (!canClone(parent, source))
+        return 0;
+
+    RunConfiguration * rc = static_cast<RunConfiguration*>(source);
+    return new RunConfiguration(parent, rc);
+}
+
+QString RunConfigurationFactory::displayNameForId(Core::Id id) const
+{
+    return info::display_name(unsafe_to_recipe_(id));
+}
+
+QList<Core::Id> RunConfigurationFactory::availableCreationIds(ProjectExplorer::Target *parent, CreationMode mode) const
+{
+    Q_UNUSED(mode)
+    if (!can_handle(parent))
+        return QList<Core::Id>();
+
+    BuildConfiguration * bc = static_cast<BuildConfiguration *>(parent->activeBuildConfiguration());
+    QList<Core::Id> allIds;
+
+    for(const info::BuildRecipe & recipe : bc->build_recipes_info().recipes)
+        allIds << recipe.to_id();
+
+    qDebug() << "called" << allIds;
+
+    return allIds;
+}
+
+bool RunConfigurationFactory::can_handle(ProjectExplorer::Target *parent) const
+{
+    if (!parent->project()->supportsKit(parent->kit()))
+        return false;
+
+    return qobject_cast<BuildConfiguration*>(parent->activeBuildConfiguration());
+}
+
+ProjectExplorer::RunConfiguration * RunConfigurationFactory::doCreate(ProjectExplorer::Target *parent, Core::Id id)
+{
+    const info::BuildRecipe * build_recipe = find_recipe_(parent, id);
+    if(!build_recipe)
+        return nullptr;
+
+    return new RunConfiguration(parent, build_recipe->to_id(), CookBuildTarget(*build_recipe));
+}
+
+ProjectExplorer::RunConfiguration * RunConfigurationFactory::doRestore(ProjectExplorer::Target *parent, const QVariantMap &map)
+{
+    info::Recipe recipe = unsafe_to_recipe_(ProjectExplorer::idFromMap(map));
+
+    BuildConfiguration * bc = static_cast<BuildConfiguration *>(parent->activeBuildConfiguration());
+    if (!bc)
+        return nullptr;
+
+    const info::BuildRecipe * build_recipe = bc->find_build_recipe(recipe.uri);
+    if (build_recipe)
+        return new RunConfiguration(parent, build_recipe->to_id(), CookBuildTarget(*build_recipe));
+    else
+        return new RunConfiguration(parent, recipe.to_id(), CookBuildTarget(recipe));
+}
+
+info::Recipe RunConfigurationFactory::unsafe_to_recipe_(const Core::Id & id)
+{
+    info::Recipe recipe;
+    if (!recipe.from_id(id))
+        Utils::writeAssertLocation("Id is not assigned to a recipe");
+
+    return recipe;
+}
+
+std::pair<info::Recipe, bool> RunConfigurationFactory::safe_to_recipe_(const Core::Id & id)
+{
+    std::pair<info::Recipe, bool> result;
+    result.second = result.first.from_id(id);
+    return result;
+}
+
+const info::BuildRecipe * RunConfigurationFactory::find_recipe_(ProjectExplorer::Target *parent, const Core::Id & id) const
+{
+    auto p = safe_to_recipe_(id);
+    if(!p.second)
+        return nullptr;
+
+    BuildConfiguration * bc = static_cast<BuildConfiguration *>(parent->activeBuildConfiguration());
+    if (!bc)
+        return nullptr;
+
+    return bc->find_build_recipe(p.first.uri);
+}
+
+
+
+
+} }

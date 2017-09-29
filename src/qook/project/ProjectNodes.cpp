@@ -20,12 +20,12 @@ QString CookNode::tooltip() const
     return project_->displayName();
 }
 
-RecipeNode::RecipeNode(const info::DetailedRecipe &recipe)
+RecipeNode::RecipeNode(const info::BuildRecipe &recipe)
     : ProjectExplorer::ProjectNode(recipe.script.parentDir())
 {
     QString name = recipe.uri;
-    if(!recipe.display_name.isEmpty())
-        name.append(QString(" (%1)").arg(recipe.display_name));
+    if(!recipe.name.isEmpty())
+        name.append(QString(" (%1)").arg(recipe.name));
 
     setDisplayName( name );
     setIcon(QIcon(":/icon/recipe"));
