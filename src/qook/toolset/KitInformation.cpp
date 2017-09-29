@@ -133,7 +133,7 @@ ProjectExplorer::KitConfigWidget * KitInformation::createConfigWidget(ProjectExp
 
 void KitInformation::addToMacroExpander(ProjectExplorer::Kit *k, Utils::MacroExpander *expander) const
 {
-    QString name = QString("%1:Executable").arg(name_);
+    QString name = QString("test:Executable").arg(name_);
     expander->registerFileVariables(name.toLatin1(), QString("Path to the %1 executable").arg(name_), [this, k]()
     {
         const Tool * tool = get_tool(k);

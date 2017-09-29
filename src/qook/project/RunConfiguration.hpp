@@ -19,10 +19,12 @@ public:
     ProjectExplorer::Runnable runnable() const override;
     QWidget *createConfigurationWidget() override;
 
+    const CookBuildTarget & target() const { return target_; }
+
 //    void setExecutable(const QString &executable);
 //    void setBaseWorkingDirectory(const Utils::FileName &workingDirectory);
 
-//    QVariantMap toMap() const override;
+    QVariantMap toMap() const override;
 
 //    QString disabledReason() const override;
 
@@ -30,7 +32,7 @@ public:
 
 //protected:
 //    RunConfiguration(ProjectExplorer::Target *parent, RunConfiguration *source);
-//    bool fromMap(const QVariantMap &map) override;
+    bool fromMap(const QVariantMap &map) override;
 
 //    void updateEnabledState() final;
 

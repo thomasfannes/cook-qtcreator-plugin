@@ -24,7 +24,7 @@ class BuildConfiguration : public ProjectExplorer::BuildConfiguration
     Q_OBJECT
 
 public:
-    explicit BuildConfiguration(ProjectExplorer::Target * parent);
+    explicit BuildConfiguration(ProjectExplorer::Target * parent, const BuildType & build_type = BuildType::Unknown);
     ~BuildConfiguration();
 
     ProjectExplorer::NamedWidget *createConfigWidget() override;
@@ -56,10 +56,13 @@ public:
     QList<CookBuildTarget> all_build_targets() const;
     QList<CookBuildTarget> all_run_targets() const;
 
+    virtual QVariantMap toMap() const;
+
 signals:
     void error_occured(const QString & error);
 
 protected:
+    virtual bool fromMap(const QVariantMap &map);
     BuildConfiguration(ProjectExplorer::Target *parent, BuildConfiguration * source);
 
 private:

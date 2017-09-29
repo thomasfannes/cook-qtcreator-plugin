@@ -86,6 +86,15 @@ void Project::handle_parsing_finished_(BuildConfiguration * configuration, Reque
         return;
 
     emitParsingFinished(failed == RequestFlags());
+
+    if (succeeded.testFlag(InfoRequestType::Build_Recipes))
+    {
+        activeTarget()->updateDefaultRunConfigurations();
+        generate_project_tree_();
+        refresh_cpp_code_model_();
+
+        emit displayNameChanged();
+    }
 }
 
 void Project::handle_sub_parsing_finished(BuildConfiguration * configuration, InfoRequestType request, bool success)
@@ -104,9 +113,7 @@ void Project::handle_sub_parsing_finished(BuildConfiguration * configuration, In
                 break;
 
             case InfoRequestType::Build_Recipes:
-                generate_project_tree_();
-                refresh_cpp_code_model_();
-                activeTarget()->updateDefaultRunConfigurations();
+
                 break;
         }
     }

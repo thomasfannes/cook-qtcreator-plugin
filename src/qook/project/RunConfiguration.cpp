@@ -10,8 +10,9 @@ namespace qook { namespace project {
 
 namespace  {
 
-const char CMAKE_RC_PREFIX[] = "CookProjectManager.CookRunConfiguration.";
-const char TITLE_KEY[] = "CookProjectManager.CookRunConfiguation.Title";
+const char URI_KEY[]            = "CookProjectManager.CookRunConfiguration.Uri";
+const char DISPLAY_NAME_KEY[]   = "CookProjectManager.CookRunConfiguration.DisplayName";
+const char EXECUTABLE_KEY[]     = "CookProjectManager.CookRunConfiguration.Executable";
 
 }
 
@@ -95,12 +96,15 @@ QWidget * RunConfiguration::createConfigurationWidget()
 //    return title_;
 //}
 
-//QVariantMap RunConfiguration::toMap() const
-//{
-//    QVariantMap map(ProjectExplorer::RunConfiguration::toMap());
-//    map.insert(QLatin1String(TITLE_KEY), title_);
-//    return map;
-//}
+QVariantMap RunConfiguration::toMap() const
+{
+    QVariantMap map(ProjectExplorer::RunConfiguration::toMap());
+    map.insert(URI_KEY, target_.uri);
+    map.insert(DISPLAY_NAME_KEY, target_.display_name);
+    map.insert(EXECUTABLE_KEY, target_.executable.toString());
+
+    return map;
+}
 
 //QString RunConfiguration::disabledReason() const
 //{
@@ -117,11 +121,14 @@ QWidget * RunConfiguration::createConfigurationWidget()
 //    return build_system_target_.uri;
 //}
 
-//bool RunConfiguration::fromMap(const QVariantMap &map)
-//{
-//    title_ = map.value(QLatin1String(TITLE_KEY)).toString();
-//    return RunConfiguration::fromMap(map);
-//}
+bool RunConfiguration::fromMap(const QVariantMap &map)
+{
+    target_.uri             = map.value(URI_KEY, QString()).toString();
+    target_.display_name    = map.value(DISPLAY_NAME_KEY, QString()).toString();
+    target_.executable      = Utils::FileName::fromString(map.value(EXECUTABLE_KEY, QString()).toString());
+
+    return ProjectExplorer::RunConfiguration::fromMap(map);
+}
 
 //QString RunConfiguration::defaultDisplayName() const
 //{

@@ -3,6 +3,7 @@
 #include "qook/Constants.hpp"
 
 #include <projectexplorer/target.h>
+#include <projectexplorer/project.h>
 #include <projectexplorer/projectexplorerconstants.h>
 #include <projectexplorer/task.h>
 #include <projectexplorer/buildconfiguration.h>
@@ -88,6 +89,7 @@ void NinjaBuildStep::stdOutput(const QString &line)
             int all = ninja_progress_.cap(2).toInt(&ok);
             if (ok && all != 0)
             {
+                futureInterface()->setProgressRange(0, 100);
                 const int percent = static_cast<int>(100.0 * done/all);
                 futureInterface()->setProgressValue(percent);
             }
@@ -131,9 +133,18 @@ bool NinjaBuildStep::configure_process_parameters_(ProjectExplorer::ProcessParam
             param.setEnvironment(bc->environment());
         }
 
-        param.setWorkingDirectory(bc->buildDirectory().toString());
+        param.setWorkingDirectory(project()->projectDirectory().toString());
         param.setCommand("/usr/bin/ninja");
-        param.setArguments(additional_arguments_);
+
+        {
+            QString arguments = additional_arguments_;
+
+            Utils::QtcProcess::addArg(&arguments, "-f");
+            Utils::QtcProcess::addArg(&arguments, bc->buildDirectory().appendPath("build.ninja").toString());
+
+            param.setArguments(arguments);
+        }
+
     }
 
     return can_init;

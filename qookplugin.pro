@@ -27,7 +27,6 @@ SOURCES += \
     src/qook/toolset/KitInformation.cpp \
     src/qook/toolset/Tool.cpp \
     src/qook/toolset/CookTool.cpp \
-    src/qook/toolset/CookManager.cpp \
     src/qook/toolset/NinjaTool.cpp \
     src/qook/toolset/Settings.cpp \
     src/qook/toolset/Manager.cpp \

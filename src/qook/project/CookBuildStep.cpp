@@ -1,6 +1,7 @@
 #include "qook/project/CookBuildStep.hpp"
 #include "qook/project/CookBuildStepConfigWidget.hpp"
 #include "qook/project/BuildConfiguration.hpp"
+#include "qook/project/RunConfiguration.hpp"
 #include "qook/project/Project.hpp"
 #include "qook/toolset/CookTool.hpp"
 #include "qook/toolset/KitInformation.hpp"
@@ -18,7 +19,6 @@ const char TARGET_NAME[] = "CookProjectManager.CookBuildStep.TargetName";
 const char TARGET_URI[] = "CookProjectManager.CookBuildStep.TargetUri";
 const char TARGET_EXECUTABLE[] = "CookProjectManager.CookBuildStep.TargetExecutable";
 const char TARGET_SPECIAL[] = "CookProjectManager.CookBuildStep.TargetSpecial";
-const char ADD_RUNCONFIGURATION_TEXT[] = "Current executable";
 
 }
 
@@ -45,7 +45,7 @@ CookBuildStep::CookBuildStep(ProjectExplorer::BuildStepList * parent, Core::Id i
 void CookBuildStep::ctor_(ProjectExplorer::BuildStepList */*parent*/)
 {
     if(build_target_.uri.isEmpty())
-        set_build_target_(CookBuildTarget::current_executable());
+        set_build_target_(CookBuildTarget::default_target());
 
     connect(project_(), &Project::recipes_available, this, &CookBuildStep::build_targets_changed);
 }
@@ -117,40 +117,37 @@ BuildConfiguration * CookBuildStep::build_configuration_() const
 
 RunConfiguration * CookBuildStep::run_configuration_() const
 {
-    return nullptr;
+    return qobject_cast<RunConfiguration *>(target()->activeRunConfiguration());
 }
 
 void CookBuildStep::set_build_target_(const CookBuildTarget & target)
 {
-    if (build_target_ == target)
-        return;
-
     build_target_ = target;
     emit build_target_changed();
 }
 
-QString CookBuildStep::all_arguments_(RunConfiguration *run_configuration) const
+QString CookBuildStep::all_arguments_(RunConfiguration * run_configuration) const
 {
     QString arguments;
 
-    Utils::QtcProcess::addArg(&arguments, "--generate");
+    Utils::QtcProcess::addArg(&arguments, "-g");
     Utils::QtcProcess::addArg(&arguments, "build.ninja");
 
-    Utils::QtcProcess::addArg(&arguments, "--input");
-    Utils::QtcProcess::addArg(&arguments, project()->projectFilePath().toString());
+    Utils::QtcProcess::addArg(&arguments, "-f");
+    Utils::QtcProcess::addArg(&arguments, project()->projectFilePath().fileName());
 
-    Utils::QtcProcess::addArg(&arguments, "--build-dir");
-    Utils::QtcProcess::addArg(&arguments, ".");
+    Utils::QtcProcess::addArg(&arguments, "-b");
+    Utils::QtcProcess::addArg(&arguments, buildConfiguration()->buildDirectory().toString());
 
     switch(buildConfiguration()->buildType())
     {
     case ProjectExplorer::BuildConfiguration::Debug:
-        Utils::QtcProcess::addArg(&arguments, "--config");
+        Utils::QtcProcess::addArg(&arguments, "-c");
         Utils::QtcProcess::addArg(&arguments, "debug");
         break;
 
         case ProjectExplorer::BuildConfiguration::Release:
-        Utils::QtcProcess::addArg(&arguments, "--config");
+        Utils::QtcProcess::addArg(&arguments, "-c");
         Utils::QtcProcess::addArg(&arguments, "release");
         break;
 
@@ -158,17 +155,13 @@ QString CookBuildStep::all_arguments_(RunConfiguration *run_configuration) const
         break;
     }
 
-    /*if(build_target_ == CookBuildTarget::all())
+    if(build_target_ == CookBuildTarget::default_target())
     {
-        Utils::QtcProcess::addArg(&arguments, "--target-all");
+        Utils::QtcProcess::addArg(&arguments, build_configuration_()->recipes_info().default_uri);
     }
-    else if(build_target_ == CookBuildTarget::clean())
+    else if(build_target_ == CookBuildTarget::current_executable())
     {
-        Utils::QtcProcess::addArg(&arguments, "clean");
-    }
-    else */if(build_target_.is_special)
-    {
-        QString target =  "<i>&lt;" + build_target_.display_name+ "&gt;</i>";
+        QString target = (run_configuration ? run_configuration->target().uri : QString("<i>&lt;current&gt;</i>"));
         Utils::QtcProcess::addArg(&arguments, target);
     }
     else
@@ -214,7 +207,7 @@ bool CookBuildStep::configure_process_parameters_(ProjectExplorer::ProcessParame
     {
         param.setMacroExpander(bc->macroExpander());
         param.setEnvironment(bc->environment());
-        param.setWorkingDirectory(bc->buildDirectory().toString());
+        param.setWorkingDirectory(project()->projectDirectory().toString());
         param.setCommand(bc->tool()->exec_file().filePath());
         param.setArguments(all_arguments_(run_configuration));
     }

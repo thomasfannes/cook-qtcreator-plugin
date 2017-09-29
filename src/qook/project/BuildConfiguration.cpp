@@ -17,6 +17,8 @@ namespace qook { namespace project {
 
 namespace  {
 
+const char BUILD_TYPE[] = "CookProject.BuildConfiguration.BuildType";
+
 ProjectExplorer::FileType convert(info::FileType ft)
 {
     switch(ft)
@@ -34,9 +36,9 @@ ProjectExplorer::FileType convert(info::FileType ft)
 
 }
 
-BuildConfiguration::BuildConfiguration(ProjectExplorer::Target * parent)
+BuildConfiguration::BuildConfiguration(ProjectExplorer::Target * parent, const BuildType &build_type)
     : ProjectExplorer::BuildConfiguration(parent, constants::QOOK_BUILDCONFIG_ID),
-      type_(BuildConfiguration::Unknown),
+      type_(build_type),
       target_(CookBuildTarget::default_target()),
       info_mngr_(new InfoManager(this))
 {
@@ -56,6 +58,20 @@ BuildConfiguration::BuildConfiguration(ProjectExplorer::Target *parent, BuildCon
 BuildConfiguration::~BuildConfiguration()
 {
     delete info_mngr_;
+}
+
+QVariantMap BuildConfiguration::toMap() const
+{
+    QVariantMap map = ProjectExplorer::BuildConfiguration::toMap();
+    map.insert(BUILD_TYPE, static_cast<int>(type_));
+
+    return map;
+}
+
+bool BuildConfiguration::fromMap(const QVariantMap &map)
+{
+    type_ = static_cast<BuildType>(map.value(BUILD_TYPE, BuildType::Unknown).toInt());
+    return ProjectExplorer::BuildConfiguration::fromMap(map);
 }
 
 QStringList BuildConfiguration::all_recipes_options() const
@@ -286,7 +302,8 @@ BuildConfiguration::BuildType BuildConfiguration::buildType() const
 QList<CookBuildTarget> BuildConfiguration::special_targets_() const
 {
     QList<CookBuildTarget> tgts;
-    tgts.append(CookBuildTarget::current_executable());
+    tgts << CookBuildTarget::default_target();
+    tgts << CookBuildTarget::current_executable();
 
     return tgts;
 }

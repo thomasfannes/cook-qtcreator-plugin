@@ -58,9 +58,7 @@ QList<Core::Id> RunConfigurationFactory::availableCreationIds(ProjectExplorer::T
     for(const info::BuildRecipe & recipe : bc->build_recipes_info().recipes)
         allIds << recipe.to_id();
 
-    qDebug() << "called" << allIds;
-
-    return allIds;
+   return allIds;
 }
 
 bool RunConfigurationFactory::can_handle(ProjectExplorer::Target *parent) const

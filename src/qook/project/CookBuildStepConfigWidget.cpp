@@ -71,7 +71,7 @@ void CookBuildStepConfigWidget::build_targets_changed()
 
 void CookBuildStepConfigWidget::item_changed(QListWidgetItem * item)
 {
-    const CookBuildTarget tgt = (item->checkState() == Qt::Checked ? item->data(Qt::UserRole).value<CookBuildTarget>() : CookBuildTarget::current_executable());
+    const CookBuildTarget tgt = (item->checkState() == Qt::Checked ? item->data(Qt::UserRole).value<CookBuildTarget>() : CookBuildTarget::default_target());
     build_step_->set_build_target_(tgt);
     update_details();
 }

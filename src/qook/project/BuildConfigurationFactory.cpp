@@ -71,7 +71,7 @@ ProjectExplorer::BuildConfiguration * BuildConfigurationFactory::create(ProjectE
     QTC_ASSERT(info->kitId == parent->kit()->id(), return 0);
     QTC_ASSERT(!info->displayName.isEmpty(), return 0);
 
-    auto bc = new project::BuildConfiguration(parent);
+    auto bc = new project::BuildConfiguration(parent, info->buildType);
     bc->setDisplayName(info->displayName);
     bc->setDefaultDisplayName(info->displayName);
     bc->setBuildDirectory(info->buildDirectory);
