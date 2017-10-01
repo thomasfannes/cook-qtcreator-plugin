@@ -40,6 +40,7 @@ public:
         : config_(config)
     {
         connect(&watcher_, &Watcher::finished, this, &AsyncManager<Parser>::run_finished);
+        connect(&watcher_, &Watcher::started, this, &AsyncManager<Parser>::started);
     }
 
     QFuture<void> future() const            { return future_; }

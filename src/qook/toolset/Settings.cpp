@@ -15,7 +15,7 @@ Settings::Settings(const Core::Id & type_id, const QString & name)
     : type_id_(type_id),
       name_(name)
 {
-    Core::Id id(constants::QOOK_TOOLSET_SETTINGS_ID);
+    Core::Id id(constants::COOK_TOOLSET_SETTINGS_ID);
 
     setId(id.withSuffix(name_));
     setDisplayName(name_);

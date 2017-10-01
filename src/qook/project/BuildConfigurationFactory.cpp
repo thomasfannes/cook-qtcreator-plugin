@@ -1,6 +1,5 @@
 #include "qook/project/BuildConfigurationFactory.hpp"
 #include "qook/project/BuildConfiguration.hpp"
-#include "qook/project/CookBuildStep.hpp"
 #include "qook/project/NinjaBuildStep.hpp"
 #include "qook/project/Project.hpp"
 #include "qook/Constants.hpp"
@@ -42,7 +41,7 @@ QList<ProjectExplorer::BuildInfo *> BuildConfigurationFactory::availableBuilds(c
 
 int BuildConfigurationFactory::priority(const ProjectExplorer::Kit *k, const QString &projectPath) const
 {
-    if (k && Utils::mimeTypeForFile(projectPath).matchesName(constants::QOOK_MIME_TYPE))
+    if (k && Utils::mimeTypeForFile(projectPath).matchesName(constants::COOK_MIME_TYPE))
         return 0;
 
     return -1;
@@ -78,33 +77,25 @@ ProjectExplorer::BuildConfiguration * BuildConfigurationFactory::create(ProjectE
 
     ProjectExplorer::BuildStepList * buildSteps = bc->stepList(ProjectExplorer::Constants::BUILDSTEPS_BUILD);
     {
-        // first a cook step
-        {
-            Q_ASSERT(buildSteps);
-            auto cookStep = new CookBuildStep(buildSteps);
-            buildSteps->insertStep(0, cookStep);
-        }
-
-        // then the ninja step
+        // the ninja step
         {
             Q_ASSERT(buildSteps);
             auto ninjaStep = new NinjaBuildStep(buildSteps);
-            buildSteps->insertStep(1, ninjaStep);
+            buildSteps->insertStep(0, ninjaStep);
         }
     }
-//    ProjectExplorer::BuildStepList * cleanSteps = bc->stepList(ProjectExplorer::Constants::BUILDSTEPS_CLEAN);
 
-
-
-
-    //    auto makeStep = new ProjectExplorer::GenericMakeStep(buildSteps);
-    //    buildSteps->insertStep(0, makeStep);
-    //    makeStep->setBuildTarget("all", /* on = */ true);
-
-    //    auto cleanMakeStep = new GenericMakeStep(cleanSteps);
-    //    cleanSteps->insertStep(0, cleanMakeStep);
-    //    cleanMakeStep->setBuildTarget("clean", /* on = */ true);
-    //    cleanMakeStep->setClean(true);
+    ProjectExplorer::BuildStepList * cleanSteps = bc->stepList(ProjectExplorer::Constants::BUILDSTEPS_CLEAN);
+    {
+        // the ninja step
+        {
+            Q_ASSERT(cleanSteps);
+            auto ninjaStep = new NinjaBuildStep(cleanSteps);
+            ninjaStep->add_build_target("clean", true);
+            ninjaStep->set_clean(true);
+            cleanSteps->insertStep(0, ninjaStep);
+        }
+    }
 
     return bc;
 }
@@ -114,7 +105,7 @@ bool BuildConfigurationFactory::canClone(const ProjectExplorer::Target *parent, 
     if (!can_handle_(parent))
         return false;
 
-    return source->id() == constants::QOOK_BUILDCONFIG_ID;
+    return source->id() == constants::COOK_BUILDCONFIG_ID;
 }
 
 ProjectExplorer::BuildConfiguration * BuildConfigurationFactory::clone(ProjectExplorer::Target *parent, ProjectExplorer::BuildConfiguration *source)
@@ -129,7 +120,7 @@ bool BuildConfigurationFactory::canRestore(const ProjectExplorer::Target *parent
 {
     if (!can_handle_(parent))
         return false;
-    return ProjectExplorer::idFromMap(map) == constants::QOOK_BUILDCONFIG_ID;
+    return ProjectExplorer::idFromMap(map) == constants::COOK_BUILDCONFIG_ID;
 }
 
 ProjectExplorer::BuildConfiguration * BuildConfigurationFactory::restore(ProjectExplorer::Target *parent, const QVariantMap &map)

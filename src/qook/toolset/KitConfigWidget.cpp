@@ -163,7 +163,7 @@ void KitConfigWidget::current_tool_changed(int index)
 
 void KitConfigWidget::manage_tools()
 {
-    Core::ICore::showOptionsDialog(constants::QOOK_TOOLSET_SETTINGS_ID, buttonWidget());
+    Core::ICore::showOptionsDialog(constants::COOK_TOOLSET_SETTINGS_ID, buttonWidget());
 }
 
 } }

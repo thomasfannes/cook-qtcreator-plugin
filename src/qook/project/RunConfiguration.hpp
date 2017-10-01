@@ -2,7 +2,7 @@
 #define HEADER_qook_project_RunConfiguration_hpp_ALREADY_INCLUDED
 
 #include <projectexplorer/runconfiguration.h>
-#include "qook/project/CookBuildStep.hpp"
+#include "qook/project/CookBuildTarget.hpp"
 
 namespace qook { namespace project {
 

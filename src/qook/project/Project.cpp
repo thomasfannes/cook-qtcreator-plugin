@@ -14,12 +14,12 @@
 namespace qook { namespace project {
 
 Project::Project(const Utils::FileName & filename)
-    : ProjectExplorer::Project(constants::QOOK_MIME_TYPE, filename, [this]() { refresh(InfoRequestType::Build_Recipes); }),
+    : ProjectExplorer::Project(constants::COOK_MIME_TYPE, filename, [this]() { refresh(InfoRequestType::Build_Recipes | InfoRequestType::Ninja); }),
       connected_target_(nullptr),
       current_build_config_(nullptr),
       cpp_code_model_updater_(new CppTools::CppProjectUpdater(this))
 {
-    setId(constants::QOOK_PROJECT_ID);
+    setId(constants::COOK_PROJECT_ID);
     setProjectLanguages(Core::Context(ProjectExplorer::Constants::CXX_LANGUAGE_ID));
     setDisplayName(filename.toFileInfo().baseName());
 
@@ -57,7 +57,7 @@ BuildConfiguration * Project::active_build_configuration() const
 
 void Project::refresh_all()
 {
-    refresh(InfoRequestType::Recipes | InfoRequestType::Build_Recipes);
+    refresh(InfoRequestType::Recipes | InfoRequestType::Ninja| InfoRequestType::Build_Recipes);
 }
 
 void Project::refresh(RequestFlags flags)
@@ -70,7 +70,7 @@ void Project::refresh(RequestFlags flags)
     current_build_config_->refresh(flags);
 }
 
-void Project::handle_parsing_started_(BuildConfiguration * configuration, RequestFlags flags)
+void Project::handle_parsing_started_(BuildConfiguration * configuration, RequestFlags /*flags*/)
 {
     auto * t = activeTarget();
     if(!t || t->activeBuildConfiguration() != configuration)
@@ -104,19 +104,8 @@ void Project::handle_sub_parsing_finished(BuildConfiguration * configuration, In
     if (!t || t->activeBuildConfiguration() != configuration)
         return;
 
-    if (success)
-    {
-        switch(request)
-        {
-            case InfoRequestType::Recipes:
-                emit recipes_available();
-                break;
-
-            case InfoRequestType::Build_Recipes:
-
-                break;
-        }
-    }
+    if (success && request == InfoRequestType::Recipes)
+        emit recipes_available();
 
     if(!success)
         ProjectExplorer::TaskHub::addTask(ProjectExplorer::Task::Error, configuration->error(), ProjectExplorer::Constants::TASK_CATEGORY_BUILDSYSTEM);
@@ -128,6 +117,13 @@ bool Project::supportsKit(ProjectExplorer::Kit *k, QString *errorMessage) const
     {
         if(errorMessage)
             *errorMessage = tr("No Cook tool set.");
+        return false;
+    }
+
+    if (!toolset::KitInformation::ninja_tool(k))
+    {
+        if(errorMessage)
+            *errorMessage = tr("No Ninja tool set.");
         return false;
     }
 

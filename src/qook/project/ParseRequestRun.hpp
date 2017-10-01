@@ -17,6 +17,8 @@ public:
     {
     }
 
+    bool is_on_first() { return processed_ == RequestFlags(); }
+
     bool is_started() { return !is_finished() && processed_ == RequestFlags(); }
     bool is_finished() { return processed_ == initial_; }
 
@@ -33,6 +35,7 @@ public:
 #define CASE(TYPE) else if (initial_.testFlag(InfoRequestType::TYPE) && !processed_.testFlag(InfoRequestType::TYPE)) { return InfoRequestType::TYPE; }
         CASE(Recipes)
         CASE(Build_Recipes)
+        CASE(Ninja)
 #undef CASE
         else
         {

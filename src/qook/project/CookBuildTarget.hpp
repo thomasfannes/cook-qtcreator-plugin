@@ -8,52 +8,30 @@
 
 namespace qook { namespace project {
 
-struct CookBuildTarget
+enum TargetType
 {
-    CookBuildTarget()
-        : is_special(false)
-    {
-    }
-
-    explicit CookBuildTarget(const info::Recipe & recipe)
-        : display_name(info::display_name(recipe)),
-          uri(recipe.uri),
-          executable(Utils::FileName()),
-          is_special(false)
-    {
-    }
-
-    explicit CookBuildTarget(const info::BuildRecipe & recipe)
-        : CookBuildTarget(static_cast<const info::Recipe &>(recipe))
-    {
-        executable = recipe.build_target;
-    }
-
-    explicit CookBuildTarget(const QString & special_name)
-        : display_name(special_name),
-          is_special(true)
-    {
-    }
-
-    static CookBuildTarget default_target()         { return CookBuildTarget ("default"); }
-    static CookBuildTarget current_executable()     { return CookBuildTarget ("current executable"); }
-
-
-    bool operator==(const CookBuildTarget & rhs) const
-    {
-        return display_name == rhs.display_name
-                && uri == rhs.uri
-                && executable == rhs.executable
-                && is_special == rhs.is_special;
-    }
-
-    QString display_name;
-    QString uri;
-    Utils::FileName executable;
-    bool is_special;
+    Target_Undefined,
+    Target_URI,
+    Target_CurrentExecutable,
+    Target_Default,
 };
 
+struct CookBuildTarget
+{
+    CookBuildTarget();
+    explicit CookBuildTarget(const info::Recipe & recipe);
+    explicit CookBuildTarget(const info::BuildRecipe & recipe);
 
+    static CookBuildTarget default_target();
+    static CookBuildTarget current_executable();
+
+    bool operator==(const CookBuildTarget & rhs) const;
+
+    TargetType type;
+    QString uri;
+    QString display_name;
+    Utils::FileName executable;
+};
 
 } }
 

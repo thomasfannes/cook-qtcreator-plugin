@@ -4,7 +4,7 @@
 
 namespace qook { namespace chai { namespace editor {
 
-void Indenter::indentBlock(QTextDocument*, const QTextBlock &block, const QChar &, const TextEditor::TabSettings &settings)
+void Indenter::indentBlock(QTextDocument*, const QTextBlock &/*block*/, const QChar & /*c*/, const TextEditor::TabSettings &/*settings*/)
 {
 }
 

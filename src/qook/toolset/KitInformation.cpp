@@ -36,11 +36,16 @@ KitInformation::KitInformation(const Core::Id & type_id, const QString & name)
 
 const Tool * KitInformation::get_tool(const ProjectExplorer::Kit * k) const
 {
+    if (!k)
+        return nullptr;
     return get_tool(type_id_, k);
 }
 
 const Tool * KitInformation::get_tool(const Core::Id & type_id, const ProjectExplorer::Kit * k)
 {
+    if(!k)
+        return nullptr;
+
     const QVariant tool_id = k->value(type_to_kit_id(type_id));
     return Manager::instance()->find_registered_tool(Core::Id::fromSetting(tool_id));
 }

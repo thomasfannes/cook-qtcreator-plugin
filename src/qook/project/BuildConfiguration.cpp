@@ -1,4 +1,5 @@
 #include "qook/project/BuildConfiguration.hpp"
+#include "qook/project/RunConfiguration.hpp"
 #include "qook/project/BuildSettingsWidget.hpp"
 #include "qook/project/InfoManager.hpp"
 #include "qook/project/ProjectNodes.hpp"
@@ -37,7 +38,7 @@ ProjectExplorer::FileType convert(info::FileType ft)
 }
 
 BuildConfiguration::BuildConfiguration(ProjectExplorer::Target * parent, const BuildType &build_type)
-    : ProjectExplorer::BuildConfiguration(parent, constants::QOOK_BUILDCONFIG_ID),
+    : ProjectExplorer::BuildConfiguration(parent, constants::COOK_BUILDCONFIG_ID),
       type_(build_type),
       target_(CookBuildTarget::default_target()),
       info_mngr_(new InfoManager(this))
@@ -86,7 +87,7 @@ QStringList BuildConfiguration::recipe_detail_options(const QString & uri) const
 
 QStringList BuildConfiguration::build_options(const QString & uri) const
 {
-    return {"-g", "build.ninja", "-f", project()->projectFilePath().toString(), uri };
+    return {"-g", "build.ninja", "-f", project()->projectFilePath().toString(), "-b", buildDirectory().toString(), uri };
 }
 
 const info::Recipes & BuildConfiguration::recipes_info() const
@@ -96,18 +97,6 @@ const info::Recipes & BuildConfiguration::recipes_info() const
 const info::BuildRecipes &BuildConfiguration::build_recipes_info() const
 {
     return info_mngr_->build_recipes().latest();
-}
-
-QString BuildConfiguration::target_uri() const
-{
-    if (target_ == CookBuildTarget::default_target())
-    {
-        return recipes_info().default_uri;
-    }
-    else if (target_.is_special)
-        return QString();
-
-    return target_.uri;
 }
 
 bool BuildConfiguration::refresh(QFlags<InfoRequestType> flags)
@@ -193,7 +182,7 @@ Project * BuildConfiguration::project_() const
 
 void BuildConfiguration::handle_request_started(InfoRequestType /*type*/)
 {
-    if (!request_.is_started())
+    if (request_.is_on_first())
     {
         clear_error_();
         project_()->handle_parsing_started_(this, request_.flags());
@@ -218,6 +207,9 @@ void BuildConfiguration::handle_request_finished(bool success, InfoRequestType t
         InfoRequestType t = request_.propose_flag();
         start_refresh_(t);
     }
+
+    if (success && type == InfoRequestType::Recipes)
+        emit build_targets_changed();;
 }
 void BuildConfiguration::handle_error_occured(const QString & error, InfoRequestType /*type*/)
 {
@@ -229,6 +221,7 @@ void BuildConfiguration::ctor()
     connect(info_mngr_, &InfoManager::started, this, &BuildConfiguration::handle_request_started);
     connect(info_mngr_, &InfoManager::finished, this, &BuildConfiguration::handle_request_finished);
     connect(info_mngr_, &InfoManager::error_occurred, this, &BuildConfiguration::handle_error_occured);
+    connect(this, &BuildConfiguration::build_target_changed, [this]() { refresh(InfoRequestType::Build_Recipes | InfoRequestType::Ninja); });
 }
 
 const info::Recipe * BuildConfiguration::find_recipe(const QString & uri) const
@@ -243,33 +236,73 @@ const info::BuildRecipe * BuildConfiguration::find_build_recipe(const QString & 
     return (it == build_recipes_info().recipes.end() ? nullptr : &*it);
 }
 
+
+QString BuildConfiguration::target_uri() const
+{
+    switch(target_.type)
+    {
+        case Target_URI:
+            return target_.uri;
+
+        case Target_CurrentExecutable:
+        {
+            RunConfiguration * rc = (target() ? qobject_cast<RunConfiguration*>(target()->activeRunConfiguration()) : nullptr);
+            if (rc)
+                return rc->target().uri;
+            else
+                return recipes_info().default_uri;
+        }
+        case Target_Default:
+            return recipes_info().default_uri;
+
+        default:
+            return QString();
+    }
+}
+
+bool BuildConfiguration::is_valid_uri(const QString & uri) const
+{
+    return !uri.isNull() && find_recipe(uri);
+}
+
 void BuildConfiguration::start_refresh_(InfoRequestType type)
 {
+    auto start_async_process = [this](auto & manager, const Core::Id & id)
+    {
+        QTC_ASSERT(manager.start_async(), return);
+        Core::ProgressManager::addTask(manager.future(), "Cooking", id);
+    };
+
+    auto handle_faulty_uri = [&]()
+    {
+        QString uri = target_uri();
+        if (!is_valid_uri(uri))
+        {
+            handle_request_started(type);
+            handle_error_occured(QString("Unknown uri: <%1>").arg(uri), type);
+            handle_request_finished(false, type);
+            return false;
+        }
+
+        return true;
+    };
+
+
     switch(type)
     {
         case InfoRequestType::Recipes:
-        {
-            QTC_ASSERT(info_mngr_->recipes().start_async(), return);
-            Core::ProgressManager::addTask(info_mngr_->recipes().future(), "Cooking", "Cook.scan.recipes");
+            start_async_process(info_mngr_->recipes(), "Cook.scan.recipes");
             break;
-        }
 
         case InfoRequestType::Build_Recipes:
-        {
-            QString uri = target_uri();
-            if (!find_recipe(uri))
-            {
-                handle_request_started(type);
-                handle_error_occured(QString("Unknown uri: <%1>").arg(uri), type);
-                handle_request_finished(false, type);
-            }
-            else
-            {
-                QTC_ASSERT(info_mngr_->build_recipes().start_async(target_uri()), return);
-                Core::ProgressManager::addTask(info_mngr_->build_recipes().future(), "Cooking", "Cook.scan.recipes");
-            }
+            if(handle_faulty_uri())
+                start_async_process(info_mngr_->build_recipes(), "Cook.scan.detailed_recipes");
             break;
-        }
+
+        case InfoRequestType::Ninja:
+            if(handle_faulty_uri())
+                start_async_process(info_mngr_->ninja_build(), "Cook.build.ninja");
+            break;
 
         default:
             bool unknown_info_request_type = false;
@@ -287,6 +320,20 @@ void BuildConfiguration::set_error_(const QString & error)
 void BuildConfiguration::clear_error_()
 {
     error_.clear();
+}
+
+void BuildConfiguration::set_build_target(const CookBuildTarget & target)
+{
+    if (target_ == target)
+        return;
+
+    target_ = target;
+    emit build_target_changed();
+}
+
+const CookBuildTarget & BuildConfiguration::build_target() const
+{
+    return target_;
 }
 
 ProjectExplorer::NamedWidget * BuildConfiguration::createConfigWidget()
@@ -330,3 +377,5 @@ QList<CookBuildTarget> BuildConfiguration::all_run_targets() const
 
 
 } }
+
+

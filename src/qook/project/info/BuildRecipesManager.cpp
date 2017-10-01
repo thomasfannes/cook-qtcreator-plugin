@@ -9,9 +9,9 @@ BuildRecipesManager::BuildRecipesManager(const BuildConfiguration * config)
 
 }
 
-bool BuildRecipesManager::start_async(const QString & uri)
+bool BuildRecipesManager::start_async()
 {
-    return async_run_([=](const BuildConfiguration * config) { return config->recipe_detail_options(uri); });
+    return async_run_([=](const BuildConfiguration * config) { return config->recipe_detail_options(config->target_uri()); });
 }
 
 } } }

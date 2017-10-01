@@ -64,17 +64,6 @@ ProjectExplorer::Runnable RunConfiguration::runnable() const
 
     return r;
 }
-//ProjectExplorer::Runnable RunConfiguration::runnable() const
-//{
-//    ProjectExplorer::StandardRunnable r;
-//    r.executable = executable_;
-//    r.commandLineArguments = extraAspect<ProjectExplorer::ArgumentsAspect>()->arguments();
-//    r.workingDirectory = extraAspect<ProjectExplorer::WorkingDirectoryAspect>()->workingDirectory().toString();
-//    r.environment = extraAspect<ProjectExplorer::LocalEnvironmentAspect>()->environment();
-//    r.runMode = extraAspect<ProjectExplorer::TerminalAspect>()->runMode();
-
-//    return r;
-//}
 
 QWidget * RunConfiguration::createConfigurationWidget()
 {

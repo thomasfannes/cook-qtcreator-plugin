@@ -2,6 +2,7 @@
 #define HEADER_qook_project_NinjaBuildStepConfigWidget_hpp_ALREADY_INCLUDED
 
 #include <projectexplorer/buildstep.h>
+#include <QLineEdit>
 
 namespace qook { namespace project {
 
@@ -9,15 +10,22 @@ class NinjaBuildStep;
 
 class NinjaBuildStepConfigWidget : public ProjectExplorer::BuildStepConfigWidget
 {
-public:
-    explicit NinjaBuildStepConfigWidget(NinjaBuildStep * build_step);
+    Q_OBJECT
 
-    virtual QString summaryText() const;
-    virtual QString displayName() const;
+public:
+    NinjaBuildStepConfigWidget(NinjaBuildStep * ninja_build_step);
+
+    QString displayName() const override;
+    QString summaryText() const override;
 
 private:
-    NinjaBuildStep * build_step_;
+    void updateDetails();
+
+    NinjaBuildStep *ninja_build_step_;
+    QString summary_text_;
+    QLineEdit *additional_arguments_;
 };
+
 
 } }
 

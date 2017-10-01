@@ -11,7 +11,7 @@ class BuildRecipesManager : public AsyncManager<BuildRecipesParser>
 public:
     BuildRecipesManager(const BuildConfiguration *config);
 
-    bool start_async(const QString &uri);
+    bool start_async();
 };
 
 } } }

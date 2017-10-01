@@ -16,9 +16,6 @@ public:
 
     virtual bool initialize(const QStringList &arguments, QString *errorString) override;
     virtual void extensionsInitialized() override;
-
-private:
-    void triggerAction();
 };
 
 } }

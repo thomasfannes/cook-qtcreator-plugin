@@ -37,8 +37,6 @@ public slots:
 private slots:
     void active_target_changed(ProjectExplorer::Target *target);
 
-
-
 protected:
     virtual RestoreResult fromMap(const QVariantMap &map, QString *errorMessage) final;
     virtual bool setupTarget(ProjectExplorer::Target *t) override;

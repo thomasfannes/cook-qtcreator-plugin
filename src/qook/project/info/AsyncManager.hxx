@@ -16,8 +16,6 @@ bool AsyncManager<Parser>::async_run_(const OptionsFunctor & get_options)
     if (!future_.isFinished())
         return false;
 
-    emit started();
-
     future_ = QtConcurrent::run([this](OptionsFunctor get_options)
     {
         Request result;

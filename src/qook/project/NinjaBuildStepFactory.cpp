@@ -13,7 +13,7 @@ NinjaBuildStepFactory::NinjaBuildStepFactory(QObject * parent)
 {
 }
 
-QList<ProjectExplorer::BuildStepInfo> NinjaBuildStepFactory::availableSteps(ProjectExplorer::BuildStepList *parent) const
+QList<ProjectExplorer::BuildStepInfo> NinjaBuildStepFactory::availableSteps(ProjectExplorer::BuildStepList */*parent*/) const
 {
     return { ProjectExplorer::BuildStepInfo(constants::NINJA_BUILD_STEP_ID, tr("Ninja Build", "Display name for NinjaBuildStep id.")) };
 }

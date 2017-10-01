@@ -16,15 +16,16 @@ const char COOK_INFO_AUTODETECTED[] = "AutoDetected";
 }
 
 Tool::Tool(const Core::Id &type_id)
-    : type_id_(type_id),
-      d_(Detection::ManualSpecified),
-      id_(generate_id())
+    : d_(Detection::ManualSpecified),
+      type_id_(type_id),
+      id_(generate_id()),
+      is_valid_(false)
 {
 }
 
 Tool::Tool(const Core::Id & type_id, Detection d, const Core::Id & id)
-    : type_id_(type_id),
-      d_(d),
+    : d_(d),
+      type_id_(type_id),
       id_(id),
       is_valid_(false)
 {

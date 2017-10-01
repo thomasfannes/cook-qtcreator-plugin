@@ -15,7 +15,6 @@ INCLUDEPATH += $${SRC_DIR}/src \
 
 SOURCES += \
     src/qook/plugin/Plugin.cpp \
-    src/qook/ProjectWizard.cpp \
     src/qook/chai/editor/Highlighter.cpp \
     src/qook/chai/editor/Scanner.cpp \
     src/qook/chai/editor/KeyWord.cpp \
@@ -36,9 +35,6 @@ SOURCES += \
     src/qook/project/ProjectNodes.cpp \
     src/qook/project/BuildSettingsWidget.cpp \
     src/qook/project/BuildConfigurationFactory.cpp \
-    src/qook/project/CookBuildStep.cpp \
-    src/qook/project/CookBuildStepConfigWidget.cpp \
-    src/qook/project/CookBuildStepFactory.cpp \
     src/qook/project/RunConfiguration.cpp \
     src/qook/project/NinjaBuildStep.cpp \
     src/qook/project/NinjaBuildStepConfigWidget.cpp \
@@ -50,7 +46,9 @@ SOURCES += \
     src/qook/project/InfoManager.cpp \
     src/qook/project/info/BuildRecipesManager.cpp \
     src/qook/project/info/BuildRecipesParser.cpp \
-    src/qook/project/info/Types.cpp
+    src/qook/project/info/Types.cpp \
+    src/qook/project/CookBuildTarget.cpp \
+    src/qook/project/BuildNinjaManager.cpp
 
 
 
@@ -58,7 +56,6 @@ HEADERS += \
     src/qook/plugin/Global.hpp \
     src/qook/plugin/Plugin.hpp \
     src/qook/Constants.hpp \
-    src/qook/ProjectWizard.hpp \
     src/qook/chai/editor/Highlighter.hpp \
     src/qook/chai/editor/Scanner.hpp \
     src/qook/chai/editor/FormatToken.hpp \
@@ -80,9 +77,6 @@ HEADERS += \
     src/qook/project/ProjectNodes.hpp \
     src/qook/project/BuildSettingsWidget.hpp \
     src/qook/project/BuildConfigurationFactory.hpp \
-    src/qook/project/CookBuildStep.hpp \
-    src/qook/project/CookBuildStepConfigWidget.hpp \
-    src/qook/project/CookBuildStepFactory.hpp \
     src/qook/project/RunConfiguration.hpp \
     src/qook/project/NinjaBuildStep.hpp \
     src/qook/project/NinjaBuildStepConfigWidget.hpp \
@@ -101,7 +95,8 @@ HEADERS += \
     src/qook/project/InfoManagerType.hpp \
     src/qook/project/ParseRequestRun.hpp \
     src/qook/project/info/BuildRecipesManager.hpp \
-    src/qook/project/info/BuildRecipesParser.hpp
+    src/qook/project/info/BuildRecipesParser.hpp \
+    src/qook/project/BuildNinjaManager.hpp
 
 
 

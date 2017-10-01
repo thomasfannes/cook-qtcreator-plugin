@@ -5,13 +5,6 @@
 
 namespace qook { namespace project { namespace info {
 
-namespace  {
-
-const QString key_uri() { return "uri"; }
-const QString key_display_name() { return "dpn"; }
-
-}
-
 Core::Id Recipe::to_id() const
 {
     QString string_rep;

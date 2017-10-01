@@ -15,7 +15,7 @@ QString Editor::contextHelpId() const
 static TextEditor::TextDocument *createCookDocument()
 {
     auto doc = new TextEditor::TextDocument;
-    doc->setId(constants::QOOK_EDITOR_ID);
+    doc->setId(constants::COOK_EDITOR_ID);
     doc->setMimeType(QLatin1String(constants::CHAI_MIME_TYPE));
     return doc;
 }
@@ -23,10 +23,10 @@ static TextEditor::TextDocument *createCookDocument()
 
 EditorFactory::EditorFactory()
 {
-    setId(constants::QOOK_EDITOR_ID);
+    setId(constants::COOK_EDITOR_ID);
     setDisplayName(tr("Chai script editor"));
     addMimeType(constants::CHAI_MIME_TYPE);
-    addMimeType(constants::QOOK_MIME_TYPE);
+    addMimeType(constants::COOK_MIME_TYPE);
 
     setDocumentCreator(createCookDocument);
 

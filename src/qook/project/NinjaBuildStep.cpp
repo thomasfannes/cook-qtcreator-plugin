@@ -1,7 +1,8 @@
 #include "qook/project/NinjaBuildStep.hpp"
 #include "qook/project/NinjaBuildStepConfigWidget.hpp"
+#include "qook/toolset/KitInformation.hpp"
+#include "qook/toolset/NinjaTool.hpp"
 #include "qook/Constants.hpp"
-
 #include <projectexplorer/target.h>
 #include <projectexplorer/project.h>
 #include <projectexplorer/projectexplorerconstants.h>
@@ -11,8 +12,25 @@
 #include <projectexplorer/kit.h>
 #include <projectexplorer/toolchain.h>
 #include <projectexplorer/kitinformation.h>
+#include <projectexplorer/processparameters.h>
+#include <QVariantMap>
 
 namespace qook { namespace project {
+
+namespace  {
+
+const char BUILD_TARGETS_KEY[] = "CookProjectManager.Build.Ninja.Targets";
+const char ADDITIONAL_ARGUMENTS_KEY[] = "CookProjectManager.Build.Ninja.AdditionalArguments";
+const char CLEAN_KEY[] = "CookProjectManager.Build.Ninja.Clean";
+
+}
+
+
+NinjaBuildStep::NinjaSettings::NinjaSettings()
+    : progress("^\\[\\s*(\\d*)/\\s*(\\d*)"),
+      progress_string("[%f/%t ")
+{
+}
 
 NinjaBuildStep::NinjaBuildStep(ProjectExplorer::BuildStepList *parent)
     : ProjectExplorer::AbstractProcessStep(parent, constants::NINJA_BUILD_STEP_ID)
@@ -26,21 +44,27 @@ NinjaBuildStep::NinjaBuildStep(ProjectExplorer::BuildStepList * parent, Core::Id
     ctor_();
 }
 
-NinjaBuildStep::NinjaBuildStep(ProjectExplorer::BuildStepList *parent, NinjaBuildStep * product)
+NinjaBuildStep::NinjaBuildStep(ProjectExplorer::BuildStepList *parent, NinjaBuildStep * bs)
     : ProjectExplorer::AbstractProcessStep(parent, constants::NINJA_BUILD_STEP_ID),
-      additional_arguments_(product->additional_arguments_)
+      build_targets_(bs->build_targets_),
+      additional_arguments_(bs->additional_arguments()),
+      clean_(bs->clean_)
 {
     ctor_();
 }
 void NinjaBuildStep::ctor_()
 {
-    percent_progress_ = QRegExp("^\\[\\s*(\\d*)%\\]");
-    ninja_progress_ = QRegExp("^\\[\\s*(\\d*)/\\s*(\\d*)");
-    ninja_progress_string_ = "[%f/%t "; // ninja: [33/100
+    setDefaultDisplayName(tr("Ninja"));
+//    percent_progress_ = QRegExp("^\\[\\s*(\\d*)%\\]");
+//    ninja_progress_ = QRegExp("^\\[\\s*(\\d*)/\\s*(\\d*)");
+//    ninja_progress_string_ = "[%f/%t "; // ninja: [33/100
 }
 
 bool NinjaBuildStep::init(QList<const BuildStep *> &earlierSteps)
 {
+
+    setIgnoreReturnValue(clean_);
+
     ProjectExplorer::ProcessParameters * pp = processParameters();
     if (!configure_process_parameters_(*pp, true))
         return false;
@@ -58,17 +82,8 @@ bool NinjaBuildStep::init(QList<const BuildStep *> &earlierSteps)
 
 void NinjaBuildStep::run(QFutureInterface<bool> &fi)
 {
+    fi.setProgressRange(0, 100);
     AbstractProcessStep::run(fi);
-}
-
-bool NinjaBuildStep::fromMap(const QVariantMap &map)
-{
-    return AbstractProcessStep::fromMap(map);
-}
-
-QVariantMap NinjaBuildStep::toMap() const
-{
-    return AbstractProcessStep::toMap();
 }
 
 ProjectExplorer::BuildStepConfigWidget * NinjaBuildStep::createConfigWidget()
@@ -76,20 +91,69 @@ ProjectExplorer::BuildStepConfigWidget * NinjaBuildStep::createConfigWidget()
     return new NinjaBuildStepConfigWidget(this);
 }
 
+bool NinjaBuildStep::immutable() const
+{
+    return false;
+}
+
+void NinjaBuildStep::add_build_target(const QString &target, bool on)
+{
+    QStringList old = build_targets_;
+    if (on && !old.contains(target))
+         old << target;
+    else if (!on && old.contains(target))
+        old.removeOne(target);
+
+    build_targets_ = old;
+}
+
+void NinjaBuildStep::set_additional_arguments(const QString &list)
+{
+    if (list == additional_arguments_)
+        return;
+
+    additional_arguments_ = list;
+
+    emit additional_arguments_changed(list);
+}
+
+QString NinjaBuildStep::additional_arguments() const
+{
+    return additional_arguments_;
+}
+
+QVariantMap NinjaBuildStep::toMap() const
+{
+    QVariantMap map = AbstractProcessStep::toMap();
+
+    map.insert(BUILD_TARGETS_KEY, build_targets_);
+    map.insert(ADDITIONAL_ARGUMENTS_KEY, additional_arguments_);
+    map.insert(CLEAN_KEY, clean_);
+    return map;
+}
+
+bool NinjaBuildStep::fromMap(const QVariantMap &map)
+{
+    build_targets_ = map.value(BUILD_TARGETS_KEY).toStringList();
+    additional_arguments_ = map.value(ADDITIONAL_ARGUMENTS_KEY).toString();
+    clean_ = map.value(CLEAN_KEY).toBool();
+
+    return BuildStep::fromMap(map);
+}
+
 void NinjaBuildStep::stdOutput(const QString &line)
 {
-    if (ninja_progress_.indexIn(line) != -1)
+    if (ninja_settings_.progress.indexIn(line) != -1)
     {
         AbstractProcessStep::stdOutput(line);
 
         bool ok = false;
-        int done = ninja_progress_.cap(1).toInt(&ok);
+        int done = ninja_settings_.progress.cap(1).toInt(&ok);
         if (ok)
         {
-            int all = ninja_progress_.cap(2).toInt(&ok);
+            int all = ninja_settings_.progress.cap(2).toInt(&ok);
             if (ok && all != 0)
             {
-                futureInterface()->setProgressRange(0, 100);
                 const int percent = static_cast<int>(100.0 * done/all);
                 futureInterface()->setProgressValue(percent);
             }
@@ -97,6 +161,19 @@ void NinjaBuildStep::stdOutput(const QString &line)
     }
     else
         AbstractProcessStep::stdError(line);
+}
+
+QString NinjaBuildStep::process_arguments_() const
+{
+    QString arguments;
+
+    Utils::QtcProcess::addArg(&arguments, "-f");
+    Utils::QtcProcess::addArg(&arguments, QString("%1/build.ninja").arg(buildConfiguration()->buildDirectory().toString()));
+
+    Utils::QtcProcess::addArgs(&arguments, additional_arguments());
+    Utils::QtcProcess::addArgs(&arguments, build_targets_);
+
+    return arguments;
 }
 
 bool NinjaBuildStep::configure_process_parameters_(ProjectExplorer::ProcessParameters & param, bool needs_init)
@@ -119,6 +196,13 @@ bool NinjaBuildStep::configure_process_parameters_(ProjectExplorer::ProcessParam
         can_init = false;
     }
 
+    const toolset::NinjaTool * tool = target() ? toolset::KitInformation::ninja_tool(target()->kit()) : nullptr;
+    if(!tool)
+    {
+        emit addTask(ProjectExplorer::Task(ProjectExplorer::Task::Error, tr("A Ninja tool must be set up for building. Configure a Ninja tool in the kit options."), Utils::FileName(), -1, ProjectExplorer::Constants::TASK_CATEGORY_BUILDSYSTEM));
+        can_init = false;
+    }
+
     if(can_init || !needs_init)
     {
         param.setMacroExpander(bc->macroExpander());
@@ -127,29 +211,19 @@ bool NinjaBuildStep::configure_process_parameters_(ProjectExplorer::ProcessParam
         {
             Utils::Environment env = bc->environment();
             Utils::Environment::setupEnglishOutput(&env);
-            if (!env.value("NINJA_STATUS").startsWith(ninja_progress_string_))
-                env.set("NINJA_STATUS", ninja_progress_string_ + "%o/sec] ");
+            if (!env.value("NINJA_STATUS").startsWith(ninja_settings_.progress_string))
+                env.set("NINJA_STATUS", ninja_settings_.progress_string + "%o/sec] ");
 
             param.setEnvironment(bc->environment());
         }
 
         param.setWorkingDirectory(project()->projectDirectory().toString());
-        param.setCommand("/usr/bin/ninja");
-
-        {
-            QString arguments = additional_arguments_;
-
-            Utils::QtcProcess::addArg(&arguments, "-f");
-            Utils::QtcProcess::addArg(&arguments, bc->buildDirectory().appendPath("build.ninja").toString());
-
-            param.setArguments(arguments);
-        }
-
+        param.setCommand(tool->exec_file().absoluteFilePath());
+        param.setArguments(process_arguments_());
     }
 
     return can_init;
 }
-
 
 
 } }
