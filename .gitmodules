@@ -7,3 +7,6 @@
 [submodule "gubg.extra"]
 	path = gubg.extra
 	url = https://github.com/thomasfannes/gubg.extra
+[submodule "qt-creator"]
+	path = qt-creator
+	url = https://github.com/qt-creator/qt-creator.git
