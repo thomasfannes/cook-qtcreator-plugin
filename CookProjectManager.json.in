@@ -1,13 +1,15 @@
 {
-    \"Name\" : \"CookPlugin\",
-    \"Version\" : \"1.0.0\",
-    \"CompatVersion\" : \"1.0.0\",
-    \"Vendor\" : \"Thomas Fannes\",
-    \"Copyright\" : \"\",
+    \"Name\" : \"CookProjectManager\",
+    \"Version\" : \"$$QTCREATOR_VERSION\",
+    \"CompatVersion\" : \"$$QTCREATOR_COMPAT_VERSION\",
+    \"Vendor\" : \"Decode-it\",
+    \"Copyright\" : \"(C) $$QTCREATOR_COPYRIGHT_YEAR Decode-it\",
     \"License\" : \"LGPLv3\",
-    \"Description\" : \"A plugin for using Cook in QtCreator\",
-    \"Url\" : \"http://www.mycompany.com\",
+    \"Category\" : \"Build Systems\",
+    \"Description\" : \"Cook support\",
+    \"Url\" : \"https://github.com/thomasfannes/cook-qtcreator-plugin\",
     $$dependencyList,
+
 
     \"Mimetypes\" : [
         \"<?xml version=\'1.0\'?>\",
