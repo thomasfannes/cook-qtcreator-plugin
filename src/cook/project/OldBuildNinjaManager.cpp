@@ -1,4 +1,4 @@
-#include "cook/project/BuildNinjaManager.hpp"
+#include "cook/project/OldBuildNinjaManager.hpp"
 #include "cook/project/BuildConfiguration.hpp"
 #include "cook/toolset/CookTool.hpp"
 #include <QtConcurrent>
@@ -22,26 +22,33 @@ QString construct_ninja_file(const QString & uri, const BuildConfiguration * con
     Core::MessageManager::write(cmd, Core::MessageManager::Silent);
     Utils::SynchronousProcessResponse response = tool->run(options);
 
+    Core::MessageManager::write(response.allOutput(), Core::MessageManager::Silent);
+
     if (!response.exitCode == response.Finished)
-        return QString("Error running cook: %1").arg(response.allOutput());
+    {
+        QString error = QString("Error running cook: %1").arg(response.allOutput());
+        Core::MessageManager::write(error, Core::MessageManager::Silent);
+
+        return error;
+    }
 
     return QString();
 }
 }
 
-BuildNinjaManager::BuildNinjaManager(BuildConfiguration *config)
+OldBuildNinjaManager::OldBuildNinjaManager(BuildConfiguration *config)
     : config_(config)
 {
-    connect(&watcher_, &Watcher::finished, this, &BuildNinjaManager::run_finished_);
-    connect(&watcher_, &Watcher::started, this, &BuildNinjaManager::started);
+    connect(&watcher_, &Watcher::finished, this, &OldBuildNinjaManager::run_finished_);
+    connect(&watcher_, &Watcher::started, this, &OldBuildNinjaManager::started);
 }
 
-QFuture<void> BuildNinjaManager::future() const
+QFuture<void> OldBuildNinjaManager::future() const
 {
     return future_;
 }
 
-void BuildNinjaManager::run_finished_()
+void OldBuildNinjaManager::run_finished_()
 {
     if (!future_.isFinished())
         return;
@@ -53,7 +60,7 @@ void BuildNinjaManager::run_finished_()
     emit finished(error.isNull());
 }
 
-bool BuildNinjaManager::start_async()
+bool OldBuildNinjaManager::start_async()
 {
     if (!future_.isFinished())
         return false;

@@ -5,21 +5,13 @@
 #include "cook/project/info/Types.hpp"
 #include "cook/project/info/RecipesManager.hpp"
 #include "cook/project/info/BuildRecipesManager.hpp"
-#include "cook/project/BuildNinjaManager.hpp"
+#include "cook/project/info/BuildNinjaManager.hpp"
 #include <QFuture>
 #include <QFlags>
 
 namespace cook { namespace project {
 
-namespace info {
-
-class RecipesManager;
-class BuildRecipesManager;
-
-}
-
 class BuildConfiguration;
-class BuildNinjaManager;
 
 class InfoManager : public QObject
 {
@@ -31,7 +23,7 @@ public:
 
     info::RecipesManager & recipes()                { return *recipes_mgr_; }
     info::BuildRecipesManager & build_recipes()     { return *build_recipes_mgr_; }
-    BuildNinjaManager & ninja_build()               { return *ninja_build_mgr_; }
+    info::BuildNinjaManager & ninja_build()         { return *ninja_build_mgr_; }
 
 signals:
     void started(InfoRequestType type);
@@ -42,7 +34,7 @@ private:
     using ParserFlags = QFlags<InfoRequestType>;
     info::RecipesManager * recipes_mgr_;
     info::BuildRecipesManager * build_recipes_mgr_;
-    BuildNinjaManager * ninja_build_mgr_;
+    info::BuildNinjaManager * ninja_build_mgr_;
 };
 
 } }

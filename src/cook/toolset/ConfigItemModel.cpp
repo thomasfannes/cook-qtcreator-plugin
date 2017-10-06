@@ -1,6 +1,6 @@
 #include "cook/toolset/ConfigItemModel.hpp"
 #include "cook/toolset/ConfigItem.hpp"
-#include "cook/toolset/Manager.hpp"
+#include "cook/toolset/ToolManager.hpp"
 #include <QUuid>
 #include <utils/qtcassert.h>
 
@@ -10,7 +10,7 @@ ConfigItemModel::ConfigItemModel(const Core::Id & type_id, QObject *parent)
     : Utils::TreeModel<Utils::TreeItem, Utils::TreeItem, ConfigItem>(parent),
       type_id_(type_id)
 {
-    Manager * mgr = Manager::instance();
+    ToolManager * mgr = ToolManager::instance();
     factory_ = mgr->factory(type_id_);
     default_item_id_ = mgr->default_tool_id(type_id);
 
@@ -24,9 +24,9 @@ ConfigItemModel::ConfigItemModel(const Core::Id & type_id, QObject *parent)
             add_tool(tool);
 
     // connect the signals
-    connect(mgr, &Manager::tool_removed, this, &ConfigItemModel::remove_tool);
-    connect(mgr, &Manager::tool_added, this, [this, mgr](const Core::Id & id) { add_tool(mgr->find_registered_tool(id)); });
-    connect(mgr, &Manager::default_tool_changed, this, [this, mgr]() { set_default_item_id(mgr->default_tool_id(type_id_)); });
+    connect(mgr, &ToolManager::tool_removed, this, &ConfigItemModel::remove_tool);
+    connect(mgr, &ToolManager::tool_added, this, [this, mgr](const Core::Id & id) { add_tool(mgr->find_registered_tool(id)); });
+    connect(mgr, &ToolManager::default_tool_changed, this, [this, mgr]() { set_default_item_id(mgr->default_tool_id(type_id_)); });
 }
 
 ConfigItem * ConfigItemModel::add_tool(const Tool * tool)
@@ -97,7 +97,7 @@ ConfigItem * ConfigItemModel::find_item(const QModelIndex & index) const
 
 void ConfigItemModel::apply()
 {
-    Manager * mgr = Manager::instance();
+    ToolManager * mgr = ToolManager::instance();
 
     QList<ConfigItem*> to_update;
 

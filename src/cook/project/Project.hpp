@@ -48,9 +48,7 @@ private:
     void handle_parsing_started_(BuildConfiguration * configuration, RequestFlags flags);
     void handle_parsing_finished_(BuildConfiguration * configuration, RequestFlags succeeded, RequestFlags failed);
     void handle_sub_parsing_finished(BuildConfiguration * configuration, InfoRequestType request, bool success);
-
-    void generate_project_tree_();
-    void refresh_cpp_code_model_();
+    void handle_build_recipes_available_();
 
     ProjectExplorer::Target * connected_target_;
     BuildConfiguration * current_build_config_;

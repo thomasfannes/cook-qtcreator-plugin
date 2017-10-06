@@ -21,22 +21,23 @@ signals:
     void finished(bool);
 };
 
+
 template <typename Parser>
 class AsyncManager : public AsyncManagerBase
 {
-    enum ResultCode {Ok, NotProcessed, ToolFailed, ParsingFailed };
+public:
+    enum ResultCode { Ok, NotProcessed, ToolFailed, ParsingFailed };
+
+    using value_type = typename Parser::value_type;
 
     struct Request
     {
         ResultCode code = NotProcessed;
-        typename Parser::value_type info;
+        typename Parser::value_type result;
         QString error;
     };
 
-public:
-    using value_type = typename Parser::value_type;
-
-    explicit AsyncManager(const BuildConfiguration * config)
+    explicit AsyncManager(const BuildConfiguration *config)
         : config_(config)
     {
         connect(&watcher_, &Watcher::finished, this, &AsyncManager<Parser>::run_finished);
@@ -47,8 +48,7 @@ public:
     const value_type & latest() const       { return value_; }
 
 protected:
-    template <typename OptionsFunctor>
-    bool async_run_(const OptionsFunctor & get_options);
+    template <typename OptionsFunctor> bool async_run_(const OptionsFunctor & get_options);
 
 private:
     void run_finished()
@@ -60,7 +60,7 @@ private:
         if(req.code != Ok)
             emit error_occured(req.error);
         else
-            value_ = std::move(req.info);
+            value_ = std::move(req.result);
 
         emit finished(req.code == Ok);
     }
@@ -75,6 +75,9 @@ private:
 
     const BuildConfiguration * config_;
 };
+
+
+
 
 
 } } }

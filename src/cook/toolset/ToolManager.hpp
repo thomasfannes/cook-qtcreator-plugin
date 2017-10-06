@@ -14,20 +14,20 @@ class PersistentSettingsWriter;
 
 namespace cook { namespace toolset {
 
-class Manager : public QObject
+class ToolManager : public QObject
 {
     Q_OBJECT
 
 private:
     using Factory = ToolFactoryInterface;
 
-    Manager(QObject * parent);
+    ToolManager(QObject * parent);
 
 public:
-    virtual ~Manager() override;
+    virtual ~ToolManager() override;
 
-    static Manager * create_instance(QObject * parent);
-    static Manager * instance();
+    static ToolManager * create_instance(QObject * parent);
+    static ToolManager * instance();
 
     bool register_tool(Tool * tool);
     void deregister_tool(const Core::Id &id);
@@ -70,7 +70,7 @@ private:
     QMap<Core::Id, Factory *> factories_;
     QMap<Core::Id, Core::Id> default_tools_;
 
-    static Manager * instance_;
+    static ToolManager * instance_;
 
 };
 

@@ -80,6 +80,7 @@ private:
     void handle_request_started(InfoRequestType type);
     void handle_request_finished(bool success, InfoRequestType type);
     void handle_error_occured(const QString & error, InfoRequestType type);
+    void handle_directory_changed();
 
     BuildType type_;
     QString error_;

@@ -2,10 +2,13 @@
 #include "cook/project/NinjaBuildStep.hpp"
 #include "cook/toolset/KitInformation.hpp"
 #include "cook/toolset/NinjaTool.hpp"
+
 #include <projectexplorer/buildconfiguration.h>
 #include <projectexplorer/target.h>
 #include <projectexplorer/project.h>
 #include <QFormLayout>
+
+#include <cmakeprojectmanager/cmakebuildstep.h>
 
 namespace cook { namespace project {
 
@@ -27,18 +30,7 @@ NinjaBuildStepConfigWidget::NinjaBuildStepConfigWidget(NinjaBuildStep *ninja_bui
 
     connect(additional_arguments_, &QLineEdit::textChanged, ninja_build_step, &NinjaBuildStep::set_additional_arguments);
     connect(ninja_build_step, &NinjaBuildStep::additional_arguments_changed, this, &NinjaBuildStepConfigWidget::updateDetails);
-    ninja_build_step_->project()->subscribeSignal(&ProjectExplorer::BuildConfiguration::environmentChanged, this, [this]()
-    {
-        if (static_cast<ProjectExplorer::BuildConfiguration *>(sender())->isActive())
-            updateDetails();
-    });
-
-    connect(ninja_build_step->project(), &ProjectExplorer::Project::activeProjectConfigurationChanged,
-            this, [this](ProjectExplorer::ProjectConfiguration *pc)
-    {
-        if (pc->isActive())
-            updateDetails();
-    });
+    connect(ninja_build_step_->project(), &ProjectExplorer::Project::environmentChanged, this, &NinjaBuildStepConfigWidget::updateDetails);
 }
 
 QString NinjaBuildStepConfigWidget::displayName() const

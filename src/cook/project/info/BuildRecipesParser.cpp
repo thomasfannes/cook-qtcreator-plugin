@@ -87,7 +87,7 @@ void BuildRecipesParser::initialize_(ParserInternal<BuildRecipes, BuildRecipesPa
         }
     }
     {
-        FSE<QString> & c = root->node<QString>(tag_active, [](auto & l, const auto & r) { l.default_uri = r; });
+        FSE<QString> & c = root->node<QString>(tag_active, [](auto & l, const auto & r) { l.active_uri = r; });
         {
             c.attribute(key_uri, [](auto & l, const auto & r) { l = QString::fromStdString(r); });
         }

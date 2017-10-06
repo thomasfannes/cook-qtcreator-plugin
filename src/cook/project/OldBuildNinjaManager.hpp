@@ -8,7 +8,7 @@ namespace cook { namespace project {
 
 class BuildConfiguration;
 
-class BuildNinjaManager : public QObject
+class OldBuildNinjaManager : public QObject
 {
     using Future = QFuture<QString>;
     using Watcher = QFutureWatcher<QString>;
@@ -16,7 +16,7 @@ class BuildNinjaManager : public QObject
     Q_OBJECT
 
 public:
-    BuildNinjaManager(BuildConfiguration * config);
+    OldBuildNinjaManager(BuildConfiguration * config);
 
     bool start_async();
     QFuture<void> future() const;

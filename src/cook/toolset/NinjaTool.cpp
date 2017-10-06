@@ -1,5 +1,5 @@
 #include "cook/toolset/NinjaTool.hpp"
-#include "cook/toolset/Manager.hpp"
+#include "cook/toolset/ToolManager.hpp"
 #include <utils/environment.h>
 #include <QRegularExpression>
 #include <QDebug>
@@ -19,7 +19,7 @@ NinjaTool::NinjaTool(Detection d, const Core::Id & id)
 
 bool NinjaTool::is_default() const
 {
-    return id().isValid() && Manager::instance()->default_tool_id(type_id()) == id();
+    return id().isValid() && ToolManager::instance()->default_tool_id(type_id()) == id();
 }
 
 std::pair<Tool::Version, bool> NinjaTool::get_version_() const

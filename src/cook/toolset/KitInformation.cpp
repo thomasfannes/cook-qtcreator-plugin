@@ -3,7 +3,7 @@
 #include "cook/toolset/Tool.hpp"
 #include "cook/toolset/NinjaTool.hpp"
 #include "cook/toolset/CookTool.hpp"
-#include "cook/toolset/Manager.hpp"
+#include "cook/toolset/ToolManager.hpp"
 #include <projectexplorer/kitmanager.h>
 #include <utils/qtcassert.h>
 #include <utils/macroexpander.h>
@@ -30,8 +30,8 @@ KitInformation::KitInformation(const Core::Id & type_id, const QString & name)
             fix(k);
     };
 
-    connect(Manager::instance(), &Manager::tool_removed, fix_kits);
-    connect(Manager::instance(), &Manager::tool_added, fix_kits);
+    connect(ToolManager::instance(), &ToolManager::tool_removed, fix_kits);
+    connect(ToolManager::instance(), &ToolManager::tool_added, fix_kits);
 }
 
 const Tool * KitInformation::get_tool(const ProjectExplorer::Kit * k) const
@@ -47,7 +47,7 @@ const Tool * KitInformation::get_tool(const Core::Id & type_id, const ProjectExp
         return nullptr;
 
     const QVariant tool_id = k->value(type_to_kit_id(type_id));
-    return Manager::instance()->find_registered_tool(Core::Id::fromSetting(tool_id));
+    return ToolManager::instance()->find_registered_tool(Core::Id::fromSetting(tool_id));
 }
 
 bool KitInformation::set_tool(const Core::Id & tool_id, ProjectExplorer::Kit * k) const
@@ -57,12 +57,12 @@ bool KitInformation::set_tool(const Core::Id & tool_id, ProjectExplorer::Kit * k
 
 bool KitInformation::set_tool(const Core::Id &type_id, const Core::Id & tool_id, ProjectExplorer::Kit * k)
 {
-    const Core::Id & to_set = tool_id.isValid() ? tool_id : Manager::instance()->default_tool_id(type_id);
+    const Core::Id & to_set = tool_id.isValid() ? tool_id : ToolManager::instance()->default_tool_id(type_id);
 
     if(!to_set.isValid())
         return false;
 
-    const Tool * tool = Manager::instance()->find_registered_tool(to_set);
+    const Tool * tool = ToolManager::instance()->find_registered_tool(to_set);
     if(tool == nullptr || tool->type_id() != type_id)
         return false;
 
@@ -102,7 +102,7 @@ void KitInformation::upgrade(ProjectExplorer::Kit * k)
 
 QVariant KitInformation::defaultValue(const ProjectExplorer::Kit *k) const
 {
-    const Core::Id id = k ? Manager::instance()->default_tool_id(type_id_) : Core::Id();
+    const Core::Id id = k ? ToolManager::instance()->default_tool_id(type_id_) : Core::Id();
     return id.toSetting();
 }
 
@@ -116,7 +116,7 @@ void KitInformation::setup(ProjectExplorer::Kit *k)
     const Tool * tool = get_tool(k);
 
     if (!tool)
-        set_tool(Manager::instance()->default_tool_id(type_id_), k);
+        set_tool(ToolManager::instance()->default_tool_id(type_id_), k);
 }
 
 void KitInformation::fix(ProjectExplorer::Kit *k)
@@ -138,7 +138,7 @@ ProjectExplorer::KitConfigWidget * KitInformation::createConfigWidget(ProjectExp
 
 void KitInformation::addToMacroExpander(ProjectExplorer::Kit *k, Utils::MacroExpander *expander) const
 {
-    QString name = QString("test:Executable").arg(name_);
+    QString name = QString("%1:Executable").arg(name_);
     expander->registerFileVariables(name.toLatin1(), QString("Path to the %1 executable").arg(name_), [this, k]()
     {
         const Tool * tool = get_tool(k);

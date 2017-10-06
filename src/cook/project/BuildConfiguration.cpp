@@ -77,17 +77,18 @@ bool BuildConfiguration::fromMap(const QVariantMap &map)
 
 QStringList BuildConfiguration::all_recipes_options() const
 {
-    return {"-g", "recipes.tree", "-f", project()->projectFilePath().toString(), "-b", buildDirectory().toString() };
+
+    return { "-g", "recipes.tree", "-f", project_()->projectFilePath().toString(), "-b", buildDirectory().toString() };
 }
 
 QStringList BuildConfiguration::recipe_detail_options(const QString & uri) const
 {
-    return {"-g", "details.tree", "-f", project()->projectFilePath().toString(), "-b", buildDirectory().toString(), uri };
+    return {"-g", "details.tree", "-f", project_()->projectFilePath().toString(), "-b", buildDirectory().toString(), uri };
 }
 
 QStringList BuildConfiguration::build_options(const QString & uri) const
 {
-    return {"-g", "build.ninja", "-f", project()->projectFilePath().toString(), "-b", buildDirectory().toString(), uri };
+    return {"-g", "build.ninja", "-f", project_()->projectFilePath().toString(), "-b", buildDirectory().toString(), "-n", uri };
 }
 
 const info::Recipes & BuildConfiguration::recipes_info() const
@@ -166,7 +167,7 @@ void BuildConfiguration::refresh_cpp_code_model(CppTools::CppProjectUpdater * cp
         rpps.append(rpp);
     }
 
-    const CppTools::ProjectUpdateInfo projectInfoUpdate(project(), cToolChain, cxxToolChain, k, rpps);
+    const CppTools::ProjectUpdateInfo projectInfoUpdate(project_(), cToolChain, cxxToolChain, k, rpps);
     cpp_updater->update(projectInfoUpdate);
 }
 
@@ -177,11 +178,12 @@ const toolset::CookTool * BuildConfiguration::tool() const
 
 Project * BuildConfiguration::project_() const
 {
-    return static_cast<Project *>(project());
+    return static_cast<Project *>(target()->project());
 }
 
 void BuildConfiguration::handle_request_started(InfoRequestType /*type*/)
 {
+    // before a request, make sure that the build directory exists
     if (request_.is_on_first())
     {
         clear_error_();
@@ -211,9 +213,15 @@ void BuildConfiguration::handle_request_finished(bool success, InfoRequestType t
     if (success && type == InfoRequestType::Recipes)
         emit build_targets_changed();;
 }
+
 void BuildConfiguration::handle_error_occured(const QString & error, InfoRequestType /*type*/)
 {
     set_error_(error);
+}
+
+void BuildConfiguration::handle_directory_changed()
+{
+    
 }
 
 void BuildConfiguration::ctor()
@@ -222,6 +230,7 @@ void BuildConfiguration::ctor()
     connect(info_mngr_, &InfoManager::finished, this, &BuildConfiguration::handle_request_finished);
     connect(info_mngr_, &InfoManager::error_occurred, this, &BuildConfiguration::handle_error_occured);
     connect(this, &BuildConfiguration::build_target_changed, [this]() { refresh(InfoRequestType::Build_Recipes | InfoRequestType::Ninja); });
+    connect(this, &ProjectExplorer::BuildConfiguration::buildDirectoryChanged, this, &BuildConfiguration::handle_directory_changed);
 }
 
 const info::Recipe * BuildConfiguration::find_recipe(const QString & uri) const
@@ -269,6 +278,7 @@ void BuildConfiguration::start_refresh_(InfoRequestType type)
 {
     auto start_async_process = [this](auto & manager, const Core::Id & id)
     {
+        qDebug() << "I am called";
         QTC_ASSERT(manager.start_async(), return);
         Core::ProgressManager::addTask(manager.future(), "Cooking", id);
     };

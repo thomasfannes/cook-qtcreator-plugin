@@ -14,13 +14,14 @@
 namespace cook { namespace project {
 
 Project::Project(const Utils::FileName & filename)
-    : ProjectExplorer::Project(constants::COOK_MIME_TYPE, filename, [this]() { refresh(InfoRequestType::Build_Recipes | InfoRequestType::Ninja); }),
+    : ProjectExplorer::Project(constants::COOK_MIME_TYPE, filename, [this]() { refresh_all(); }),
       connected_target_(nullptr),
       current_build_config_(nullptr),
       cpp_code_model_updater_(new CppTools::CppProjectUpdater(this))
 {
     setId(constants::COOK_PROJECT_ID);
     setProjectLanguages(Core::Context(ProjectExplorer::Constants::CXX_LANGUAGE_ID));
+    setProjectContext(Core::Context(constants::COOK_PROJECT_CONTEXT));
     setDisplayName(filename.toFileInfo().baseName());
 
     connect(this, &ProjectExplorer::Project::activeTargetChanged, this, &Project::active_target_changed);
@@ -62,7 +63,6 @@ void Project::refresh_all()
 
 void Project::refresh(RequestFlags flags)
 {
-    QTC_ASSERT(!isParsing(), return);
     QTC_ASSERT(connected_target_, return);
     current_build_config_ = static_cast<BuildConfiguration*>(connected_target_->activeBuildConfiguration());
     QTC_ASSERT(current_build_config_, return);
@@ -75,26 +75,16 @@ void Project::handle_parsing_started_(BuildConfiguration * configuration, Reques
     auto * t = activeTarget();
     if(!t || t->activeBuildConfiguration() != configuration)
         return;
-
-    emitParsingStarted();
 }
 
-void Project::handle_parsing_finished_(BuildConfiguration * configuration, RequestFlags succeeded, RequestFlags failed)
+void Project::handle_parsing_finished_(BuildConfiguration * configuration, RequestFlags succeeded, RequestFlags /*failed*/)
 {
     auto * t = activeTarget();
     if(!t || t->activeBuildConfiguration() != configuration)
         return;
 
-    emitParsingFinished(failed == RequestFlags());
-
     if (succeeded.testFlag(InfoRequestType::Build_Recipes))
-    {
-        activeTarget()->updateDefaultRunConfigurations();
-        generate_project_tree_();
-        refresh_cpp_code_model_();
-
-        emit displayNameChanged();
-    }
+        handle_build_recipes_available_();
 }
 
 void Project::handle_sub_parsing_finished(BuildConfiguration * configuration, InfoRequestType request, bool success)
@@ -151,17 +141,19 @@ bool Project::setupTarget(ProjectExplorer::Target *t)
     return true;
 }
 
-void Project::generate_project_tree_()
+void Project::handle_build_recipes_available_()
 {
-    setRootProjectNode(current_build_config_->generate_tree());
-}
+    activeTarget()->updateDefaultRunConfigurations();
 
-void Project::refresh_cpp_code_model_()
-{
     QTC_ASSERT(current_build_config_, return);
+    setRootProjectNode(current_build_config_->generate_tree());
     current_build_config_->refresh_cpp_code_model(cpp_code_model_updater_);
-}
 
+    const QString & main_uri = current_build_config_->recipes_info().default_uri;
+    const info::Recipe * active_recipe = current_build_config_->find_recipe(main_uri);
+    QTC_ASSERT(active_recipe, return);
+    setDisplayName(info::display_name(*active_recipe));
+}
 
 
 } }

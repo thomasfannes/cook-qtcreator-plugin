@@ -1,5 +1,9 @@
-isEmpty(IDE_SOURCE_TREE): IDE_SOURCE_TREE = "/home/tfannes/programming/qt-creator"
-isEmpty(IDE_BUILD_TREE): IDE_BUILD_TREE = "/home/tfannes/programming/build-qt-creator-debug"
+isEmpty(IDE_SOURCE_TREE): IDE_SOURCE_TREE = "/home/tfannes/programming/qtcreator-cook/qt-creator"
+isEmpty(IDE_BUILD_TREE): IDE_BUILD_TREE = "/usr"
+
+USE_USER_DESTDIR = yes
+
+
 QTC_PLUGIN_NAME = CookProjectManager
 QTC_PLUGIN_DEPENDS = coreplugin texteditor projectexplorer cpptools
 include($$IDE_SOURCE_TREE/src/qtcreatorplugin.pri)
@@ -27,7 +31,6 @@ SOURCES += \
     src/cook/toolset/CookTool.cpp \
     src/cook/toolset/NinjaTool.cpp \
     src/cook/toolset/Settings.cpp \
-    src/cook/toolset/Manager.cpp \
     src/cook/toolset/KitConfigWidget.cpp \
     src/cook/project/Project.cpp \
     src/cook/project/BuildConfiguration.cpp \
@@ -47,7 +50,10 @@ SOURCES += \
     src/cook/project/info/BuildRecipesParser.cpp \
     src/cook/project/info/Types.cpp \
     src/cook/project/CookBuildTarget.cpp \
-    src/cook/project/BuildNinjaManager.cpp
+    src/cook/plugin/Manager.cpp \
+    src/cook/toolset/ToolManager.cpp \
+    src/cook/project/info/BuildNinjaManager.cpp \
+    src/cook/project/OldBuildNinjaManager.cpp
 
 
 
@@ -70,7 +76,6 @@ HEADERS += \
     src/cook/toolset/Tool.hpp \
     src/cook/toolset/CookTool.hpp \
     src/cook/toolset/NinjaTool.hpp \
-    src/cook/toolset/Manager.hpp \
     src/cook/project/Project.hpp \
     src/cook/project/BuildConfiguration.hpp \
     src/cook/project/ProjectNodes.hpp \
@@ -95,13 +100,16 @@ HEADERS += \
     src/cook/project/ParseRequestRun.hpp \
     src/cook/project/info/BuildRecipesManager.hpp \
     src/cook/project/info/BuildRecipesParser.hpp \
-    src/cook/project/BuildNinjaManager.hpp
+    src/cook/plugin/Manager.hpp \
+    src/cook/toolset/ToolManager.hpp \
+    src/cook/project/info/BuildNinjaManager.hpp \
+    src/cook/project/OldBuildNinjaManager.hpp
 
 OTHER_FILES += \
-    CookPlugin.json.in
+    CookProjectManager.json.in
 
 FORMS += \
     src/cook/toolset/SettingsWidget.ui
 
 RESOURCES += \
-    CookPlugin.qrc
+    CookProjectManager.qrc

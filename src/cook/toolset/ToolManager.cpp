@@ -1,4 +1,4 @@
-#include "cook/toolset/Manager.hpp"
+#include "cook/toolset/ToolManager.hpp"
 #include "cook/toolset/Tool.hpp"
 #include <utils/environment.h>
 #include <utils/hostosinfo.h>
@@ -27,43 +27,43 @@ const char COOK_TOOL_FILE_VERSION_KEY[] = "Version";
 
 }
 
-Manager * Manager::instance_ = nullptr;
+ToolManager * ToolManager::instance_ = nullptr;
 
-Manager::Manager(QObject *parent)
+ToolManager::ToolManager(QObject *parent)
     : QObject(parent),
       writer_(nullptr)
 {
-    connect(this, &Manager::tool_added, this, &Manager::tools_changed);
-    connect(this, &Manager::tool_removed, this, &Manager::tools_changed);
-    connect(this, &Manager::tool_updated, this, &Manager::tools_changed);
-    connect(Core::ICore::instance(), &Core::ICore::saveSettingsRequested, this, &Manager::save_tools_);
+    connect(this, &ToolManager::tool_added, this, &ToolManager::tools_changed);
+    connect(this, &ToolManager::tool_removed, this, &ToolManager::tools_changed);
+    connect(this, &ToolManager::tool_updated, this, &ToolManager::tools_changed);
+    connect(Core::ICore::instance(), &Core::ICore::saveSettingsRequested, this, &ToolManager::save_tools_);
 }
 
 
-void Manager::initialize_writer_()
+void ToolManager::initialize_writer_()
 {
     if(!writer_)
         writer_ = new Utils::PersistentSettingsWriter(user_settings_filename(), QStringLiteral("QtCreatorCookTools"));
 }
 
 
-Manager * Manager::create_instance(QObject * parent)
+ToolManager * ToolManager::create_instance(QObject * parent)
 {
     QTC_ASSERT(!instance_, return instance_);
 
-    instance_ = new Manager(parent);
+    instance_ = new ToolManager(parent);
     return instance_;
 }
 
 
-Manager * Manager::instance()
+ToolManager * ToolManager::instance()
 {
     QTC_CHECK(instance_);
     return instance_;
 }
 
 
-Manager::~Manager()
+ToolManager::~ToolManager()
 {
     qDeleteAll(registered_tools_);
     delete writer_;
@@ -72,14 +72,14 @@ Manager::~Manager()
 }
 
 
-Utils::FileName Manager::user_settings_filename()
+Utils::FileName ToolManager::user_settings_filename()
 {
     QFileInfo settingsLocation(Core::ICore::settings()->fileName());
     return Utils::FileName::fromString(settingsLocation.absolutePath() + QString("/qtcreator/cook/tools.xml"));
 }
 
 
-QList<const Tool *> Manager::registered_tools() const
+QList<const Tool *> ToolManager::registered_tools() const
 {
     QList<const Tool *> lst;
     for(Tool * t : registered_tools_)
@@ -89,7 +89,7 @@ QList<const Tool *> Manager::registered_tools() const
 }
 
 
-bool Manager::register_tool(Tool * tool)
+bool ToolManager::register_tool(Tool * tool)
 {
     // an existing, new tool?
     if (!tool || registered_tools_.contains(tool))
@@ -117,7 +117,7 @@ bool Manager::register_tool(Tool * tool)
 }
 
 
-const Tool * Manager::update_or_register_tool(const Tool & update)
+const Tool * ToolManager::update_or_register_tool(const Tool & update)
 {
     Tool * tool = nullptr;
 
@@ -144,14 +144,14 @@ const Tool * Manager::update_or_register_tool(const Tool & update)
 }
 
 
-const Tool *Manager::find_registered_tool(const Core::Id & id) const
+const Tool *ToolManager::find_registered_tool(const Core::Id & id) const
 {
     auto it = std::find_if(registered_tools_.begin(), registered_tools_.end(), [&](Tool * t) {return t->id() == id;});
     return it != registered_tools_.end() ? *it : nullptr;
 }
 
 
-void Manager::deregister_tool(const Core::Id &id)
+void ToolManager::deregister_tool(const Core::Id &id)
 {
     auto it = std::find_if(registered_tools_.begin(), registered_tools_.end(), [&](Tool * t) { return t->id() == id; });
     if (it != registered_tools_.end())
@@ -177,7 +177,7 @@ void Manager::deregister_tool(const Core::Id &id)
 }
 
 
-void Manager::set_default_tool(const Core::Id &id)
+void ToolManager::set_default_tool(const Core::Id &id)
 {
     auto it = std::find_if(registered_tools_.begin(), registered_tools_.end(), [&](Tool * t) { return t->id() == id; });
     if (it == registered_tools_.end())
@@ -194,7 +194,7 @@ void Manager::set_default_tool(const Core::Id &id)
 }
 
 
-void Manager::restore()
+void ToolManager::restore()
 {
     // find all tools
     QList<Tool*> persistent = load_tools_();
@@ -263,7 +263,7 @@ void Manager::restore()
 }
 
 
-QList<Tool *> Manager::load_tools_()
+QList<Tool *> ToolManager::load_tools_()
 {
     Utils::PersistentSettingsReader reader;
     if(!reader.load(user_settings_filename()))
@@ -322,7 +322,7 @@ QList<Tool *> Manager::load_tools_()
 }
 
 
-void Manager::save_tools_()
+void ToolManager::save_tools_()
 {
     if(!writer_)
         initialize_writer_();
@@ -362,7 +362,7 @@ void Manager::save_tools_()
 }
 
 
-QList<Tool *> Manager::autodetect_tools_(const Factory & factory)
+QList<Tool *> ToolManager::autodetect_tools_(const Factory & factory)
 {
     QSet<QString> candidates;
 
@@ -429,12 +429,12 @@ QList<Tool *> Manager::autodetect_tools_(const Factory & factory)
     return auto_detected;
 }
 
-const ToolFactoryInterface * Manager::factory(const Core::Id & type_id) const
+const ToolFactoryInterface * ToolManager::factory(const Core::Id & type_id) const
 {
     return factories_.value(type_id, nullptr);
 }
 
-void Manager::register_factory(const Core::Id & type_id, ToolFactoryInterface * factory)
+void ToolManager::register_factory(const Core::Id & type_id, ToolFactoryInterface * factory)
 {
     QTC_ASSERT(factories_.find(type_id) == factories_.end(), return);
     factories_[type_id] = factory;

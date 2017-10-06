@@ -58,14 +58,14 @@ struct Recipes
 struct BuildRecipes
 {
     QMap<QString, BuildRecipe> recipes;
-    QString default_uri;
+    QString active_uri;
 };
 
 inline QString display_name(const Recipe & recipe)
 {
     QString val = recipe.uri;
 
-    if (recipe.name.isEmpty())
+    if (!recipe.name.isEmpty())
         val.append(QString(" (%1)").arg(recipe.name));
 
     return val;

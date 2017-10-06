@@ -1,7 +1,7 @@
 #include "cook/toolset/KitConfigWidget.hpp"
 #include "cook/toolset/KitInformation.hpp"
 #include "cook/toolset/Tool.hpp"
-#include "cook/toolset/Manager.hpp"
+#include "cook/toolset/ToolManager.hpp"
 #include "cook/Constants.hpp"
 
 #include <utils/qtcassert.h>
@@ -16,7 +16,7 @@ KitConfigWidget::KitConfigWidget(ProjectExplorer::Kit *kit, const ProjectExplore
       type_id_(type_id),
       name_(name)
 {
-    Manager * mgr = Manager::instance();
+    ToolManager * mgr = ToolManager::instance();
 
     combo_box_->setEnabled(false);
     combo_box_->setToolTip(toolTip());
@@ -32,9 +32,9 @@ KitConfigWidget::KitConfigWidget(ProjectExplorer::Kit *kit, const ProjectExplore
 
     manage_btn_->setContentsMargins(0, 0, 0, 0);
     connect(manage_btn_, &QPushButton::clicked, this, &KitConfigWidget::manage_tools);
-    connect(mgr, &Manager::tool_added,      [this] (const Core::Id & id, const Core::Id & type_id) {  if(type_id == type_id_) KitConfigWidget::tool_added(id); });
-    connect(mgr, &Manager::tool_removed,    [this] (const Core::Id & id, const Core::Id & type_id) {  if(type_id == type_id_) KitConfigWidget::tool_removed(id); });
-    connect(mgr, &Manager::tool_updated,    [this] (const Core::Id & id, const Core::Id & type_id) {  if(type_id == type_id_) KitConfigWidget::tool_updated(id); });
+    connect(mgr, &ToolManager::tool_added,      [this] (const Core::Id & id, const Core::Id & type_id) {  if(type_id == type_id_) KitConfigWidget::tool_added(id); });
+    connect(mgr, &ToolManager::tool_removed,    [this] (const Core::Id & id, const Core::Id & type_id) {  if(type_id == type_id_) KitConfigWidget::tool_removed(id); });
+    connect(mgr, &ToolManager::tool_updated,    [this] (const Core::Id & id, const Core::Id & type_id) {  if(type_id == type_id_) KitConfigWidget::tool_updated(id); });
 }
 
 
@@ -94,7 +94,7 @@ int KitConfigWidget::indexOf(const Core::Id &id)
 
 void KitConfigWidget::tool_added(const Core::Id &id)
 {
-    const Tool * tool = Manager::instance()->find_registered_tool(id);
+    const Tool * tool = ToolManager::instance()->find_registered_tool(id);
     QTC_ASSERT(tool, return);
 
     combo_box_->addItem(tool->display_name(), tool->id().toSetting());
@@ -105,7 +105,7 @@ void KitConfigWidget::tool_added(const Core::Id &id)
 
 void KitConfigWidget::tool_updated(const Core::Id &id)
 {
-    const Tool * tool = Manager::instance()->find_registered_tool(id);
+    const Tool * tool = ToolManager::instance()->find_registered_tool(id);
     QTC_ASSERT(tool, return);
 
     const int pos = indexOf(id);

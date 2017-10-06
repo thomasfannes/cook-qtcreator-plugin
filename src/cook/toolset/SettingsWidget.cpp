@@ -1,5 +1,5 @@
 #include "cook/toolset/SettingsWidget.hpp"
-#include "cook/toolset/Manager.hpp"
+#include "cook/toolset/ToolManager.hpp"
 #include "cook/toolset/ConfigItemModel.hpp"
 #include "cook/toolset/ConfigItem.hpp"
 #include "cook/toolset/CookTool.hpp"

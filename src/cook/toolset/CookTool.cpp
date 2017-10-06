@@ -1,5 +1,5 @@
 #include "cook/toolset/CookTool.hpp"
-#include "cook/toolset/Manager.hpp"
+#include "cook/toolset/ToolManager.hpp"
 #include <utils/environment.h>
 #include <QRegularExpression>
 #include <QDebug>
@@ -18,7 +18,7 @@ CookTool::CookTool(Detection d, const Core::Id & id)
 
 bool CookTool::is_default() const
 {
-    return id().isValid() && Manager::instance()->default_tool_id(type_id()) == id();
+    return id().isValid() && ToolManager::instance()->default_tool_id(type_id()) == id();
 }
 
 std::pair<CookTool::Version, bool> CookTool::get_version_() const
