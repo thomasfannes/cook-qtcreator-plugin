@@ -52,8 +52,8 @@ private:
 
     ProjectExplorer::Target * connected_target_;
     BuildConfiguration * current_build_config_;
-    QList<const ProjectExplorer::FileNode *> all_files_;
     CppTools::CppProjectUpdater *cpp_code_model_updater_ = nullptr;
+    QList<ProjectExplorer::ProjectDocument *> script_files_;
 };
 
 
