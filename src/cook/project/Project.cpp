@@ -145,6 +145,7 @@ void Project::handle_build_recipes_available_()
 {
     activeTarget()->updateDefaultRunConfigurations();
 
+
     QTC_ASSERT(current_build_config_, return);
     setRootProjectNode(current_build_config_->generate_tree());
     current_build_config_->refresh_cpp_code_model(cpp_code_model_updater_);
