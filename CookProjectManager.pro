@@ -1,4 +1,4 @@
-isEmpty(IDE_SOURCE_TREE): IDE_SOURCE_TREE = "/home/tfannes/programming/qtcreator-cook/qt-creator"
+isEmpty(IDE_SOURCE_TREE): IDE_SOURCE_TREE = "qt-creator"
 isEmpty(IDE_BUILD_TREE): IDE_BUILD_TREE = "/usr"
 
 USE_USER_DESTDIR = yes
@@ -52,8 +52,7 @@ SOURCES += \
     src/cook/project/CookBuildTarget.cpp \
     src/cook/plugin/Manager.cpp \
     src/cook/toolset/ToolManager.cpp \
-    src/cook/project/info/BuildNinjaManager.cpp \
-    src/cook/project/OldBuildNinjaManager.cpp
+    src/cook/project/info/BuildNinjaManager.cpp
 
 
 
@@ -102,8 +101,7 @@ HEADERS += \
     src/cook/project/info/BuildRecipesParser.hpp \
     src/cook/plugin/Manager.hpp \
     src/cook/toolset/ToolManager.hpp \
-    src/cook/project/info/BuildNinjaManager.hpp \
-    src/cook/project/OldBuildNinjaManager.hpp
+    src/cook/project/info/BuildNinjaManager.hpp
 
 OTHER_FILES += \
     CookProjectManager.json.in

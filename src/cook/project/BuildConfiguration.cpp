@@ -77,7 +77,6 @@ bool BuildConfiguration::fromMap(const QVariantMap &map)
 
 QStringList BuildConfiguration::all_recipes_options() const
 {
-
     return { "-g", "recipes.tree", "-f", project_()->projectFilePath().toString(), "-b", buildDirectory().toString() };
 }
 
@@ -88,7 +87,17 @@ QStringList BuildConfiguration::recipe_detail_options(const QString & uri) const
 
 QStringList BuildConfiguration::build_options(const QString & uri) const
 {
-    return {"-g", "build.ninja", "-f", project_()->projectFilePath().toString(), "-b", buildDirectory().toString(), "-n", uri };
+    QStringList args = {"-g", "build.ninja", "-f", project_()->projectFilePath().toString(), "-b", buildDirectory().toString(), "-n" };
+
+    switch(type_)
+    {
+        case BuildType::Debug:      args << "-c" << "debug"; break;
+        case BuildType::Release:    args << "-c" << "release"; break;
+        default: break;
+    }
+
+    args << uri;
+    return args;
 }
 
 const info::Recipes & BuildConfiguration::recipes_info() const
