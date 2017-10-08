@@ -20,17 +20,19 @@ CookBuildTarget::CookBuildTarget()
 
 }
 
-CookBuildTarget::CookBuildTarget(const info::Recipe & recipe)
+CookBuildTarget::CookBuildTarget(const info::Element & element)
     : type(Target_URI),
-      uri(recipe.uri),
-      display_name(info::display_name(recipe))
+      uri(element.uri),
+      display_name(info::display_name(element))
 {
 }
 
-CookBuildTarget::CookBuildTarget(const info::BuildRecipe & recipe)
-    : CookBuildTarget(static_cast<const info::Recipe &>(recipe))
+CookBuildTarget::CookBuildTarget(const info::Recipe & recipe)
+    : type(Target_URI),
+      uri(recipe.uri),
+      display_name(info::display_name(recipe)),
+      executable(recipe.build_target)
 {
-    executable = recipe.build_target;
 }
 
 CookBuildTarget CookBuildTarget::default_target()

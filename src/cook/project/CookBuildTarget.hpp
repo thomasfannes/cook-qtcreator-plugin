@@ -19,8 +19,8 @@ enum TargetType
 struct CookBuildTarget
 {
     CookBuildTarget();
+    explicit CookBuildTarget(const info::Element & element);
     explicit CookBuildTarget(const info::Recipe & recipe);
-    explicit CookBuildTarget(const info::BuildRecipe & recipe);
 
     static CookBuildTarget default_target();
     static CookBuildTarget current_executable();

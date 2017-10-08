@@ -34,7 +34,6 @@ public:
 
 #define CASE(TYPE) else if (initial_.testFlag(InfoRequestType::TYPE) && !processed_.testFlag(InfoRequestType::TYPE)) { return InfoRequestType::TYPE; }
         CASE(Recipes)
-        CASE(Build_Recipes)
         CASE(Ninja)
 #undef CASE
         else

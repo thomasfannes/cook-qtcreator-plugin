@@ -52,6 +52,7 @@ private:
 
     ProjectExplorer::Target * connected_target_;
     BuildConfiguration * current_build_config_;
+    QList<ProjectExplorer::ProjectDocument *> project_documents;
     CppTools::CppProjectUpdater *cpp_code_model_updater_ = nullptr;
 };
 

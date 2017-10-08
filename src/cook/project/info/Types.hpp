@@ -6,6 +6,8 @@
 #include <QString>
 #include <QVector>
 #include <QMap>
+#include <QSet>
+#include <QSharedPointer>
 
 namespace cook { namespace project { namespace info {
 
@@ -30,18 +32,27 @@ struct FileInfo
     Utils::FileName file;
 };
 
-struct Recipe
+struct Element
 {
     QString uri;
     QString name;
+    Utils::FileName script;
 
     Core::Id to_id() const;
     bool from_id(const Core::Id & id);
 };
 
-struct BuildRecipe : public Recipe
+struct Recipe : public Element
 {
-    Utils::FileName script;
+    explicit Recipe(bool is_recipe_flag = false)
+        : is_recipe(is_recipe_flag)
+    {
+    }
+
+    QVector<Recipe> children;
+
+    bool is_recipe;
+    QString tag;
     TargetType type;
     Utils::FileName build_target;
 
@@ -51,17 +62,11 @@ struct BuildRecipe : public Recipe
 
 struct Recipes
 {
-    QMap<QString, Recipe> recipes;
+    Recipe root;
     QString default_uri;
 };
 
-struct BuildRecipes
-{
-    QMap<QString, BuildRecipe> recipes;
-    QString active_uri;
-};
-
-inline QString display_name(const Recipe & recipe)
+inline QString display_name(const Element & recipe)
 {
     QString val = recipe.uri;
 

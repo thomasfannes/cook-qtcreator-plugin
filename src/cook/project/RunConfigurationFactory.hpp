@@ -28,9 +28,9 @@ private:
     ProjectExplorer::RunConfiguration *doCreate(ProjectExplorer::Target *parent, Core::Id id) override;
     ProjectExplorer::RunConfiguration *doRestore(ProjectExplorer::Target *parent, const QVariantMap &map) override;
 
-    static info::Recipe unsafe_to_recipe_(const Core::Id & id);
-    static std::pair<info::Recipe, bool> safe_to_recipe_(const Core::Id & id);
-    const info::BuildRecipe * find_recipe_(ProjectExplorer::Target *parent, const Core::Id & id) const;
+    static info::Element unsafe_to_element_(const Core::Id & id);
+    static std::pair<info::Element, bool> safe_to_element_(const Core::Id & id);
+    const info::Recipe *find_recipe_(ProjectExplorer::Target *parent, const Core::Id & id) const;
 };
 
 } }

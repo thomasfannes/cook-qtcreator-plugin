@@ -5,7 +5,7 @@
 
 namespace cook { namespace project { namespace info {
 
-Core::Id Recipe::to_id() const
+Core::Id Element::to_id() const
 {
     QString string_rep;
 
@@ -20,7 +20,7 @@ Core::Id Recipe::to_id() const
     return Core::Id::fromSetting(string_rep);
 }
 
-bool Recipe::from_id(const Core::Id & id)
+bool Element::from_id(const Core::Id & id)
 {
     uri.clear();
     name.clear();

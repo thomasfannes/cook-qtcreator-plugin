@@ -29,7 +29,7 @@ bool RunConfigurationFactory::canRestore(ProjectExplorer::Target *parent, const 
     if (!qobject_cast<Project *>(parent->project()) && !qobject_cast<BuildConfiguration *>(parent->activeBuildConfiguration()))
         return false;
 
-    return safe_to_recipe_(ProjectExplorer::idFromMap(map)).second;
+    return safe_to_element_(ProjectExplorer::idFromMap(map)).second;
 }
 
 ProjectExplorer::RunConfiguration * RunConfigurationFactory::clone(ProjectExplorer::Target *parent, ProjectExplorer::RunConfiguration * source)
@@ -43,7 +43,7 @@ ProjectExplorer::RunConfiguration * RunConfigurationFactory::clone(ProjectExplor
 
 QString RunConfigurationFactory::displayNameForId(Core::Id id) const
 {
-    return info::display_name(unsafe_to_recipe_(id));
+    return info::display_name(unsafe_to_element_(id));
 }
 
 QList<Core::Id> RunConfigurationFactory::availableCreationIds(ProjectExplorer::Target *parent, CreationMode mode) const
@@ -55,7 +55,7 @@ QList<Core::Id> RunConfigurationFactory::availableCreationIds(ProjectExplorer::T
     BuildConfiguration * bc = static_cast<BuildConfiguration *>(parent->activeBuildConfiguration());
     QList<Core::Id> allIds;
 
-    for(const info::BuildRecipe & recipe : bc->build_recipes_info().recipes)
+    for(const info::Element & recipe : bc->all_targets())
         allIds << recipe.to_id();
 
    return allIds;
@@ -71,47 +71,47 @@ bool RunConfigurationFactory::can_handle(ProjectExplorer::Target *parent) const
 
 ProjectExplorer::RunConfiguration * RunConfigurationFactory::doCreate(ProjectExplorer::Target *parent, Core::Id id)
 {
-    const info::BuildRecipe * build_recipe = find_recipe_(parent, id);
-    if(!build_recipe)
+    const info::Recipe * recipe = find_recipe_(parent, id);
+    if(!recipe)
         return nullptr;
 
-    return new RunConfiguration(parent, build_recipe->to_id(), CookBuildTarget(*build_recipe));
+    return new RunConfiguration(parent, recipe->to_id(), CookBuildTarget(*recipe));
 }
 
 ProjectExplorer::RunConfiguration * RunConfigurationFactory::doRestore(ProjectExplorer::Target *parent, const QVariantMap &map)
 {
-    info::Recipe recipe = unsafe_to_recipe_(ProjectExplorer::idFromMap(map));
+    info::Element element = unsafe_to_element_(ProjectExplorer::idFromMap(map));
 
     BuildConfiguration * bc = static_cast<BuildConfiguration *>(parent->activeBuildConfiguration());
     if (!bc)
         return nullptr;
 
-    const info::BuildRecipe * build_recipe = bc->find_build_recipe(recipe.uri);
-    if (build_recipe)
-        return new RunConfiguration(parent, build_recipe->to_id(), CookBuildTarget(*build_recipe));
+    const info::Recipe * recipe = bc->find_recipe(element.uri);
+    if (recipe)
+        return new RunConfiguration(parent, recipe->to_id(), CookBuildTarget(*recipe));
     else
-        return new RunConfiguration(parent, recipe.to_id(), CookBuildTarget(recipe));
+        return new RunConfiguration(parent, element.to_id(), CookBuildTarget(element));
 }
 
-info::Recipe RunConfigurationFactory::unsafe_to_recipe_(const Core::Id & id)
+info::Element RunConfigurationFactory::unsafe_to_element_(const Core::Id & id)
 {
-    info::Recipe recipe;
-    if (!recipe.from_id(id))
+    info::Element element;
+    if (!element.from_id(id))
         Utils::writeAssertLocation("Id is not assigned to a recipe");
 
-    return recipe;
+    return element;
 }
 
-std::pair<info::Recipe, bool> RunConfigurationFactory::safe_to_recipe_(const Core::Id & id)
+std::pair<info::Element, bool> RunConfigurationFactory::safe_to_element_(const Core::Id & id)
 {
-    std::pair<info::Recipe, bool> result;
+    std::pair<info::Element, bool> result;
     result.second = result.first.from_id(id);
     return result;
 }
 
-const info::BuildRecipe * RunConfigurationFactory::find_recipe_(ProjectExplorer::Target *parent, const Core::Id & id) const
+const info::Recipe * RunConfigurationFactory::find_recipe_(ProjectExplorer::Target *parent, const Core::Id & id) const
 {
-    auto p = safe_to_recipe_(id);
+    auto p = safe_to_element_(id);
     if(!p.second)
         return nullptr;
 
@@ -119,7 +119,7 @@ const info::BuildRecipe * RunConfigurationFactory::find_recipe_(ProjectExplorer:
     if (!bc)
         return nullptr;
 
-    return bc->find_build_recipe(p.first.uri);
+    return bc->find_recipe(p.first.uri);
 }
 
 

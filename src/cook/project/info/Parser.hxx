@@ -14,7 +14,23 @@ class ParserInternal : public gubg::parse::polymorphic_tree::Parser
 public:
     ParserInternal(info::Parser<Info, Derived> * p) : p_(p) {}
 
-    virtual void handle_error(gubg::parse::polymorphic_tree::ReturnCode code) override
+    QString get_error() const
+    {
+        QString path;
+
+        for(auto it = current_path().begin(); it != current_path().end(); ++it)
+        {
+            QString t = QString::fromStdString(*it);
+            if(it != current_path().begin())
+                path.append("/");
+
+            path.append(t);
+        }
+
+        return QString("Badly formatted tree at [%1] (%2)").arg(path).arg(QString::fromStdString(gubg::parse::polymorphic_tree::to_string(this->error_code())));
+    }
+
+    void handle_error(gubg::parse::polymorphic_tree::ReturnCode code)
     {
         QString path;
 
@@ -42,7 +58,12 @@ bool Parser<Info, Derived>::parse(Info & info, const QByteArray & input)
     static_cast<Derived *>(this)->initialize_(p, info);
 
     if (!p.process(input.toStdString()))
+    {
+        QString error = p.get_error();
+        emit error_occured(error);
+
         return false;
+    }
 
     return true;
 }

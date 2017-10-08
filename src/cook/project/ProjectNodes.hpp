@@ -12,6 +12,7 @@ class CookNode : public ProjectExplorer::ProjectNode
 {
 public:
     explicit CookNode(Project * project);
+    CookNode(Project * project, const Utils::FileName & dir);
 
     virtual bool showInSimpleTree() const override;
     virtual QString tooltip() const override;
@@ -23,7 +24,7 @@ private:
 class RecipeNode : public ProjectExplorer::ProjectNode
 {
 public:
-    explicit RecipeNode(const info::BuildRecipe & recipe);
+    explicit RecipeNode(const info::Recipe & recipe);
 
     void compress();
 };

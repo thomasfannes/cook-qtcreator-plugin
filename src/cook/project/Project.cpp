@@ -58,7 +58,7 @@ BuildConfiguration * Project::active_build_configuration() const
 
 void Project::refresh_all()
 {
-    refresh(InfoRequestType::Recipes | InfoRequestType::Ninja| InfoRequestType::Build_Recipes);
+    refresh(InfoRequestType::Recipes | InfoRequestType::Ninja);
 }
 
 void Project::refresh(RequestFlags flags)
@@ -82,9 +82,6 @@ void Project::handle_parsing_finished_(BuildConfiguration * configuration, Reque
     auto * t = activeTarget();
     if(!t || t->activeBuildConfiguration() != configuration)
         return;
-
-    if (succeeded.testFlag(InfoRequestType::Build_Recipes))
-        handle_build_recipes_available_();
 }
 
 void Project::handle_sub_parsing_finished(BuildConfiguration * configuration, InfoRequestType request, bool success)
@@ -95,7 +92,10 @@ void Project::handle_sub_parsing_finished(BuildConfiguration * configuration, In
         return;
 
     if (success && request == InfoRequestType::Recipes)
+    {
+        handle_build_recipes_available_();
         emit recipes_available();
+    }
 
     if(!success)
         ProjectExplorer::TaskHub::addTask(ProjectExplorer::Task::Error, configuration->error(), ProjectExplorer::Constants::TASK_CATEGORY_BUILDSYSTEM);
@@ -145,15 +145,25 @@ void Project::handle_build_recipes_available_()
 {
     activeTarget()->updateDefaultRunConfigurations();
 
-
     QTC_ASSERT(current_build_config_, return);
-    setRootProjectNode(current_build_config_->generate_tree());
+    setRootProjectNode(current_build_config_->generate_linear_project());
     current_build_config_->refresh_cpp_code_model(cpp_code_model_updater_);
 
-    const QString & main_uri = current_build_config_->recipes_info().default_uri;
+    setDisplayName(info::display_name(current_build_config_->root_book()));
+
+    const QString & main_uri = current_build_config_->default_uri();
     const info::Recipe * active_recipe = current_build_config_->find_recipe(main_uri);
     QTC_ASSERT(active_recipe, return);
-    setDisplayName(info::display_name(*active_recipe));
+
+    // add watcher for all the script filenames
+    {
+        qDeleteAll(project_documents);
+        project_documents.clear();;
+        for(const Utils::FileName & script_fn : current_build_config_->all_script_files())
+            project_documents << new ProjectExplorer::ProjectDocument(constants::COOK_MIME_TYPE, script_fn, [this] { refresh_all(); });
+    }
+
+
 }
 
 

@@ -118,12 +118,12 @@ Utils::SynchronousProcessResponse Tool::run(const QStringList &args) const
         }
     }
 
-    if (run_details.attempted_run && !run_details.did_run)
-    {
-        Utils::SynchronousProcessResponse response;
-        response.result = Utils::SynchronousProcessResponse::StartFailed;
-        return response;
-    }
+//    if (run_details.attempted_run && !run_details.did_run)
+//    {
+//        Utils::SynchronousProcessResponse response;
+//        response.result = Utils::SynchronousProcessResponse::StartFailed;
+//        return response;
+//    }
 
     Utils::SynchronousProcessResponse response = run_(exe_file_, args);
     run_details.attempted_run = true;

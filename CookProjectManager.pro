@@ -1,7 +1,8 @@
-isEmpty(IDE_SOURCE_TREE): IDE_SOURCE_TREE = "qt-creator"
-isEmpty(IDE_BUILD_TREE): IDE_BUILD_TREE = "/usr"
+isEmpty(IDE_SOURCE_TREE): IDE_SOURCE_TREE = "/home/tfannes/programming/CookProjectManager/qt-creator"
+isEmpty(IDE_BUILD_TREE): IDE_BUILD_TREE = "/home/tfannes/programming/CookProjectManager/build-qtcreator-debug"
 
-USE_USER_DESTDIR = yes
+#isEmpty(IDE_BUILD_TREE): IDE_BUILD_TREE = "/usr"
+#USE_USER_DESTDIR = yes
 
 
 QTC_PLUGIN_NAME = CookProjectManager
@@ -46,15 +47,11 @@ SOURCES += \
     src/cook/project/info/RecipesParser.cpp \
     src/cook/project/info/RecipesManager.cpp \
     src/cook/project/InfoManager.cpp \
-    src/cook/project/info/BuildRecipesManager.cpp \
-    src/cook/project/info/BuildRecipesParser.cpp \
     src/cook/project/info/Types.cpp \
     src/cook/project/CookBuildTarget.cpp \
     src/cook/plugin/Manager.cpp \
     src/cook/toolset/ToolManager.cpp \
     src/cook/project/info/BuildNinjaManager.cpp
-
-
 
 HEADERS += \
     src/cook/plugin/Global.hpp \
@@ -97,8 +94,6 @@ HEADERS += \
     src/cook/project/InfoManager.hpp \
     src/cook/project/InfoManagerType.hpp \
     src/cook/project/ParseRequestRun.hpp \
-    src/cook/project/info/BuildRecipesManager.hpp \
-    src/cook/project/info/BuildRecipesParser.hpp \
     src/cook/plugin/Manager.hpp \
     src/cook/toolset/ToolManager.hpp \
     src/cook/project/info/BuildNinjaManager.hpp

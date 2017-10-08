@@ -35,13 +35,15 @@ public:
     QStringList all_recipes_options() const;
     QStringList recipe_detail_options(const QString & uri) const;
     QStringList build_options(const QString & uri) const;
+    QString default_uri() const;
 
-    const info::Recipes & recipes_info() const;
-    const info::BuildRecipes & build_recipes_info() const;
+    Utils::FileNameList all_script_files() const;
+
     const info::Recipe * find_recipe(const QString & uri) const;
-    const info::BuildRecipe * find_build_recipe(const QString & uri) const;
+    const info::Recipe & root_book() const;
     QList<CookBuildTarget> all_build_targets() const;
     QList<CookBuildTarget> all_run_targets() const;
+    QList<info::Element> all_targets() const;
 
 
     QString target_uri() const;
@@ -53,7 +55,8 @@ public:
     bool refresh(QFlags<InfoRequestType> flags);
     const QString & error() const { return error_; }
 
-    ProjectExplorer::ProjectNode * generate_tree() const;
+    ProjectExplorer::ProjectNode * generate_linear_project() const;
+    ProjectExplorer::ProjectNode * generate_tree_project() const;
     void refresh_cpp_code_model(CppTools::CppProjectUpdater * cpp_updater);
 
 signals:
@@ -72,6 +75,8 @@ private:
     QList<CookBuildTarget> special_targets_() const;
 
     void ctor();
+
+    const info::Recipes & recipes_info_() const;
     void set_error_(const QString & error);
     void clear_error_();
     void start_refresh_(InfoRequestType type);

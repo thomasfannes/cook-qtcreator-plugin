@@ -13,6 +13,7 @@
 #include <projectexplorer/buildinfo.h>
 #include <utils/qtcassert.h>
 #include <utils/algorithm.h>
+#include <stack>
 
 namespace cook { namespace project {
 
@@ -32,6 +33,23 @@ ProjectExplorer::FileType convert(info::FileType ft)
 
         default:
             return ProjectExplorer::FileType::Unknown;
+    }
+}
+
+template <typename Functor>
+void visit_tree(const info::Recipe & root, Functor && f)
+{
+    std::stack<const info::Recipe *> todo;
+    todo.push(&root);
+
+    while(!todo.empty())
+    {
+        const info::Recipe * cur = todo.top();
+        todo.pop();
+
+        if ( f(*cur) )
+            for(const auto & p : cur->children)
+                todo.push(&p);
     }
 }
 
@@ -100,13 +118,38 @@ QStringList BuildConfiguration::build_options(const QString & uri) const
     return args;
 }
 
-const info::Recipes & BuildConfiguration::recipes_info() const
+const info::Recipes & BuildConfiguration::recipes_info_() const
 {
     return info_mngr_->recipes().latest();
 }
-const info::BuildRecipes &BuildConfiguration::build_recipes_info() const
+
+const info::Recipe & BuildConfiguration::root_book() const
 {
-    return info_mngr_->build_recipes().latest();
+    const auto & p = info_mngr_->recipes().latest();
+
+    if (p.root.children.size() != 1)
+        return p.root;
+    else
+        return p.root.children.front();
+}
+
+Utils::FileNameList BuildConfiguration::all_script_files() const
+{
+    Utils::FileNameList lst;
+
+    visit_tree(recipes_info_().root, [&](const info::Recipe & recipe)
+    {
+        if(!recipe.script.isEmpty())
+            lst << recipe.script;
+        return true;
+    });
+
+    return lst;
+}
+
+QString BuildConfiguration::default_uri() const
+{
+    return recipes_info_().default_uri;
 }
 
 bool BuildConfiguration::refresh(QFlags<InfoRequestType> flags)
@@ -123,25 +166,41 @@ bool BuildConfiguration::refresh(QFlags<InfoRequestType> flags)
     return true;
 }
 
-ProjectExplorer::ProjectNode * BuildConfiguration::generate_tree() const
+ProjectExplorer::ProjectNode * BuildConfiguration::generate_linear_project() const
 {
     CookNode * root = new CookNode(project_());
 
-    for (const info::BuildRecipe & r : build_recipes_info().recipes)
-    {
-        RecipeNode * rn = new RecipeNode(r);
+    using P = std::pair<const info::Recipe *, RecipeNode *>;
+    std::stack<P> todo;
+    todo.push(std::make_pair(&root_book(), nullptr));
 
-        for(const info::FileInfo & f : r.files)
+    while (!todo.empty())
+    {
+        P p = todo.top();
+        todo.pop();
+
+        const info::Recipe & recipe = *p.first;
+
+        RecipeNode * rn = new RecipeNode(recipe);
+        for(const info::FileInfo & f : recipe.files)
         {
             auto * n = new ProjectExplorer::FileNode(f.file, convert(f.type), false);
             rn->addNestedNode(n);
         }
 
-        ChaiScriptNode * cn = new ChaiScriptNode(r.script);
+        ChaiScriptNode * cn = new ChaiScriptNode(recipe.script);
         rn->addNode(cn);
-
         rn->compress();
-        root->addNode(rn);
+
+        // add to the parent level
+        if (p.second == nullptr)
+            root->addNode(rn);
+        else
+            p.second->addNode(rn);
+
+        // and visit the children
+        for(const auto & p : recipe.children)
+            todo.push(std::make_pair(&p, rn));
     }
 
     return root;
@@ -159,8 +218,8 @@ void BuildConfiguration::refresh_cpp_code_model(CppTools::CppProjectUpdater * cp
 
     CppTools::RawProjectParts rpps;
 
-    for(const info::BuildRecipe & recipe : build_recipes_info().recipes)
-    {
+    visit_tree(root_book(), [&](const info::Recipe & recipe) {
+
         CppTools::RawProjectPart rpp;
         rpp.setDisplayName(recipe.uri);
         rpp.setProjectFileLocation(recipe.script.toString());
@@ -174,7 +233,9 @@ void BuildConfiguration::refresh_cpp_code_model(CppTools::CppProjectUpdater * cp
         rpp.setFiles(files);
 
         rpps.append(rpp);
-    }
+
+        return true;
+    });
 
     const CppTools::ProjectUpdateInfo projectInfoUpdate(project_(), cToolChain, cxxToolChain, k, rpps);
     cpp_updater->update(projectInfoUpdate);
@@ -238,22 +299,30 @@ void BuildConfiguration::ctor()
     connect(info_mngr_, &InfoManager::started, this, &BuildConfiguration::handle_request_started);
     connect(info_mngr_, &InfoManager::finished, this, &BuildConfiguration::handle_request_finished);
     connect(info_mngr_, &InfoManager::error_occurred, this, &BuildConfiguration::handle_error_occured);
-    connect(this, &BuildConfiguration::build_target_changed, [this]() { refresh(InfoRequestType::Build_Recipes | InfoRequestType::Ninja); });
+    connect(this, &BuildConfiguration::build_target_changed, [this]() { refresh(InfoRequestType::Ninja); });
     connect(this, &ProjectExplorer::BuildConfiguration::buildDirectoryChanged, this, &BuildConfiguration::handle_directory_changed);
 }
 
 const info::Recipe * BuildConfiguration::find_recipe(const QString & uri) const
 {
-    auto it = recipes_info().recipes.find(uri);
-    return (it == recipes_info().recipes.end() ? nullptr : &*it);
-}
+    const info::Recipe * result = nullptr;
 
-const info::BuildRecipe * BuildConfiguration::find_build_recipe(const QString & uri) const
-{
-    auto it = build_recipes_info().recipes.find(uri);
-    return (it == build_recipes_info().recipes.end() ? nullptr : &*it);
-}
+    visit_tree(root_book(), [&](const info::Recipe & recipe) {
 
+        if(result)
+            return false;
+
+        if(recipe.uri == uri)
+        {
+            result = &recipe;
+            return false;
+        }
+
+        return true;
+    });
+
+    return result;
+}
 
 QString BuildConfiguration::target_uri() const
 {
@@ -268,10 +337,10 @@ QString BuildConfiguration::target_uri() const
             if (rc)
                 return rc->target().uri;
             else
-                return recipes_info().default_uri;
+                return recipes_info_().default_uri;
         }
         case Target_Default:
-            return recipes_info().default_uri;
+            return recipes_info_().default_uri;
 
         default:
             return QString();
@@ -287,7 +356,6 @@ void BuildConfiguration::start_refresh_(InfoRequestType type)
 {
     auto start_async_process = [this](auto & manager, const Core::Id & id)
     {
-        qDebug() << "I am called";
         QTC_ASSERT(manager.start_async(), return);
         Core::ProgressManager::addTask(manager.future(), "Cooking", id);
     };
@@ -311,11 +379,6 @@ void BuildConfiguration::start_refresh_(InfoRequestType type)
     {
         case InfoRequestType::Recipes:
             start_async_process(info_mngr_->recipes(), "Cook.scan.recipes");
-            break;
-
-        case InfoRequestType::Build_Recipes:
-            if(handle_faulty_uri())
-                start_async_process(info_mngr_->build_recipes(), "Cook.scan.detailed_recipes");
             break;
 
         case InfoRequestType::Ninja:
@@ -377,19 +440,33 @@ QList<CookBuildTarget> BuildConfiguration::special_targets_() const
 QList<CookBuildTarget> BuildConfiguration::all_build_targets() const
 {    
     QList<CookBuildTarget> tgts = special_targets_();
-
-    for(const info::Recipe & recipe: recipes_info().recipes)
-        tgts << CookBuildTarget(recipe);
+    tgts.append(all_run_targets());
 
     return tgts;
 }
+
 
 QList<CookBuildTarget> BuildConfiguration::all_run_targets() const
 {
     QList<CookBuildTarget> tgts;
 
-    for(const info::BuildRecipe & recipe: build_recipes_info().recipes)
-        tgts << CookBuildTarget(recipe);
+    visit_tree(root_book(), [&](const info::Recipe & recipe) {
+        if (recipe.is_recipe)
+            tgts << CookBuildTarget(recipe);
+        return true;
+    });
+
+    return tgts;
+}
+
+QList<info::Element> BuildConfiguration::all_targets() const
+{
+    QList<info::Element> tgts;
+    visit_tree(root_book(), [&](const info::Recipe & recipe) {
+        if (recipe.is_recipe)
+            tgts << recipe;
+        return true;
+    });
 
     return tgts;
 }
