@@ -55,15 +55,12 @@ NinjaBuildStep::NinjaBuildStep(ProjectExplorer::BuildStepList *parent, NinjaBuil
 void NinjaBuildStep::ctor_()
 {
     setDefaultDisplayName(tr("Ninja"));
-//    percent_progress_ = QRegExp("^\\[\\s*(\\d*)%\\]");
-//    ninja_progress_ = QRegExp("^\\[\\s*(\\d*)/\\s*(\\d*)");
-//    ninja_progress_string_ = "[%f/%t "; // ninja: [33/100
 }
 
 bool NinjaBuildStep::init(QList<const BuildStep *> &earlierSteps)
 {
-
     setIgnoreReturnValue(clean_);
+
 
     ProjectExplorer::ProcessParameters * pp = processParameters();
     if (!configure_process_parameters_(*pp, true))
@@ -82,6 +79,13 @@ bool NinjaBuildStep::init(QList<const BuildStep *> &earlierSteps)
 
 void NinjaBuildStep::run(QFutureInterface<bool> &fi)
 {
+    // do we have a ninja file ?
+    if (!ninja_build_file().exists())
+    {
+        ProjectExplorer::Task task(ProjectExplorer::Task::Error, QString("No ninja file '%1' found").arg(ninja_build_file().toString()), Utils::FileName(), -1, ProjectExplorer::Constants::TASK_CATEGORY_BUILDSYSTEM);
+        emit addTask(task);
+    }
+
     fi.setProgressRange(0, 100);
     AbstractProcessStep::run(fi);
 }
@@ -163,12 +167,20 @@ void NinjaBuildStep::stdOutput(const QString &line)
         AbstractProcessStep::stdError(line);
 }
 
+Utils::FileName NinjaBuildStep::ninja_build_file() const
+{
+    Utils::FileName ninja_file_ = buildConfiguration()->buildDirectory();
+    ninja_file_.appendPath("build.ninja");
+
+    return ninja_file_;
+}
+
 QString NinjaBuildStep::process_arguments_() const
 {
     QString arguments;
 
     Utils::QtcProcess::addArg(&arguments, "-f");
-    Utils::QtcProcess::addArg(&arguments, QString("%1/build.ninja").arg(buildConfiguration()->buildDirectory().toString()));
+    Utils::QtcProcess::addArg(&arguments, ninja_build_file().toString());
 
     Utils::QtcProcess::addArgs(&arguments, additional_arguments());
     Utils::QtcProcess::addArgs(&arguments, build_targets_);

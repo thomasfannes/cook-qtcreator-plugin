@@ -27,12 +27,11 @@ public:
     BuildConfiguration * active_build_configuration() const;
 
 signals:
-    void recipes_available();
-    void detailed_recipes_available();
+    void recipes_changed();
+    void target_uri_changed();
 
 public slots:
     void refresh_all();
-    void refresh(RequestFlags flags);
 
 private slots:
     void active_target_changed(ProjectExplorer::Target *target);
@@ -43,8 +42,8 @@ protected:
 
 private:
     friend class BuildConfiguration;
+    void refresh_(RequestFlags flags);
 
-//    void update_nodes(const Cook & cook);
     void handle_parsing_started_(BuildConfiguration * configuration, RequestFlags flags);
     void handle_parsing_finished_(BuildConfiguration * configuration, RequestFlags succeeded, RequestFlags failed);
     void handle_sub_parsing_finished(BuildConfiguration * configuration, InfoRequestType request, bool success);
@@ -55,7 +54,6 @@ private:
     QList<ProjectExplorer::ProjectDocument *> project_documents;
     CppTools::CppProjectUpdater *cpp_code_model_updater_ = nullptr;
 };
-
 
 } }
 

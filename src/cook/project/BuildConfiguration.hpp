@@ -32,38 +32,35 @@ public:
     virtual BuildType buildType() const override;
     virtual QVariantMap toMap() const;
 
-    QStringList all_recipes_options() const;
-    QStringList recipe_detail_options(const QString & uri) const;
-    QStringList build_options(const QString & uri) const;
-    QString default_uri() const;
-
+    const toolset::CookTool * tool() const;
+    QStringList ninja_build_args() const;
+    Utils::FileName project_file() const;
     Utils::FileNameList all_script_files() const;
 
+
+    QString default_uri() const;
     const info::Recipe * find_recipe(const QString & uri) const;
     const info::Recipe & root_book() const;
     QList<CookBuildTarget> all_build_targets() const;
     QList<CookBuildTarget> all_run_targets() const;
     QList<info::Element> all_targets() const;
 
-
-    QString target_uri() const;
-    bool is_valid_uri(const QString & uri) const;
-    const toolset::CookTool * tool() const;
     void set_build_target(const CookBuildTarget & target);
     const CookBuildTarget & build_target() const;
+    QString target_uri() const;
 
     bool refresh(QFlags<InfoRequestType> flags);
     const QString & error() const { return error_; }
 
     ProjectExplorer::ProjectNode * generate_linear_project() const;
-    ProjectExplorer::ProjectNode * generate_tree_project() const;
     void refresh_cpp_code_model(CppTools::CppProjectUpdater * cpp_updater);
+
+    Project * project() const;
 
 signals:
     void error_occured(const QString & error);
-
-    void build_targets_changed();
-    void build_target_changed();
+    void recipes_changed();
+    void target_uri_changed();
 
 protected:
     virtual bool fromMap(const QVariantMap &map);
@@ -80,7 +77,7 @@ private:
     void set_error_(const QString & error);
     void clear_error_();
     void start_refresh_(InfoRequestType type);
-    Project * project_() const;
+
 
     void handle_request_started(InfoRequestType type);
     void handle_request_finished(bool success, InfoRequestType type);

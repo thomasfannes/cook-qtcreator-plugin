@@ -1,6 +1,7 @@
 #include "cook/project/BuildConfigurationFactory.hpp"
 #include "cook/project/BuildConfiguration.hpp"
 #include "cook/project/NinjaBuildStep.hpp"
+#include "cook/project/CookNinjaStep.hpp"
 #include "cook/project/Project.hpp"
 #include "cook/Constants.hpp"
 #include <projectexplorer/projectexplorerconstants.h>
@@ -77,23 +78,37 @@ ProjectExplorer::BuildConfiguration * BuildConfigurationFactory::create(ProjectE
 
     ProjectExplorer::BuildStepList * buildSteps = bc->stepList(ProjectExplorer::Constants::BUILDSTEPS_BUILD);
     {
+        // the cook step
+        {
+            Q_ASSERT(buildSteps);
+            auto cookStep = new CookNinjaStep(buildSteps);
+            buildSteps->insertStep(0, cookStep);
+        }
+
         // the ninja step
         {
             Q_ASSERT(buildSteps);
             auto ninjaStep = new NinjaBuildStep(buildSteps);
-            buildSteps->insertStep(0, ninjaStep);
+            buildSteps->insertStep(1, ninjaStep);
         }
     }
 
     ProjectExplorer::BuildStepList * cleanSteps = bc->stepList(ProjectExplorer::Constants::BUILDSTEPS_CLEAN);
     {
+        // the cook step
+        {
+            Q_ASSERT(buildSteps);
+            auto cookStep = new CookNinjaStep(buildSteps);
+            cleanSteps->insertStep(0, cookStep);
+        }
+
         // the ninja step
         {
             Q_ASSERT(cleanSteps);
             auto ninjaStep = new NinjaBuildStep(cleanSteps);
             ninjaStep->add_build_target("clean", true);
             ninjaStep->set_clean(true);
-            cleanSteps->insertStep(0, ninjaStep);
+            cleanSteps->insertStep(1, ninjaStep);
         }
     }
 
@@ -149,12 +164,15 @@ ProjectExplorer::BuildInfo * BuildConfigurationFactory::create_build_info_(const
     auto info = new ProjectExplorer::BuildInfo(this);
 
     info->buildDirectory = project_dir;
+    info->buildDirectory.appendPath("build");
+
     info->kitId = k->id();
     info->buildType = build_type;
 
+
     switch(build_type)
     {
-#define CASE(TYPE) case BuildConfiguration::TYPE: info->typeName = tr(#TYPE); info->buildDirectory.appendString("-build-"#TYPE); break
+#define CASE(TYPE) case BuildConfiguration::TYPE: info->typeName = tr(#TYPE); break
     CASE(Debug);
     CASE(Unknown);
     CASE(Profile);

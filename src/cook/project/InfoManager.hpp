@@ -3,8 +3,7 @@
 
 #include "cook/project/InfoManagerType.hpp"
 #include "cook/project/info/Types.hpp"
-#include "cook/project/info/RecipesManager.hpp"
-#include "cook/project/info/BuildNinjaManager.hpp"
+#include "cook/project/info/StructureManager.hpp"
 #include <QFuture>
 #include <QFlags>
 
@@ -20,8 +19,7 @@ public:
     InfoManager(BuildConfiguration * config);
     ~InfoManager();
 
-    info::RecipesManager & recipes()                { return *recipes_mgr_; }
-    info::BuildNinjaManager & ninja_build()         { return *ninja_build_mgr_; }
+    info::StructureManager & recipes()                { return *recipes_mgr_; }
 
 signals:
     void started(InfoRequestType type);
@@ -30,8 +28,7 @@ signals:
 
 private:
     using ParserFlags = QFlags<InfoRequestType>;
-    info::RecipesManager * recipes_mgr_;
-    info::BuildNinjaManager * ninja_build_mgr_;
+    info::StructureManager * recipes_mgr_;
 };
 
 } }

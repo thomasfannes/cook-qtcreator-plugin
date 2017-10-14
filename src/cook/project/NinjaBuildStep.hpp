@@ -35,6 +35,7 @@ protected:
     NinjaBuildStep(ProjectExplorer::BuildStepList *bsl, Core::Id id);
 
     bool fromMap(const QVariantMap &map) override;
+    Utils::FileName ninja_build_file() const;
 
 private:
     QString process_arguments_() const;

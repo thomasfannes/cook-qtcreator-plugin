@@ -19,7 +19,7 @@ public:
     QString summaryText() const override;
 
 private:
-    void updateDetails();
+    void update_details_();
 
     NinjaBuildStep *ninja_build_step_;
     QString summary_text_;

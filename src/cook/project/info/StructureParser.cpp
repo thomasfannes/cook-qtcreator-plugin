@@ -1,12 +1,12 @@
-#include "cook/project/info/RecipesParser.hpp"
-#include "cook/project/info/Types.hpp"
-#include "cook/project/info/Parser.hxx"
+#include "cook/project/info/StructureParser.hpp"
+#include "cook/project/info/CookProcess.hpp"
+#include "gubg/parse/polymorphic_tree/Parser.hpp"
 #include "gubg/parse/polymorphic_tree/TypedParser.hpp"
 #include "gubg/parse/polymorphic_tree/RootElement.hpp"
 
 namespace cook { namespace project { namespace info {
 
-namespace {
+namespace  {
 
 #define TAG(TYPE) const static char * tag_##TYPE = #TYPE
 TAG(structure);
@@ -165,11 +165,117 @@ std::shared_ptr<RootParser> root_parser(Recipes & recipe)
 
 }
 
-template bool Parser<Recipes, RecipesParser>::parse(Recipes & info, const QByteArray & input);
-
-void RecipesParser::initialize_(ParserInternal<Recipes, RecipesParser> & p, Recipes & value)
+class StructureParser::P
 {
-    p.set_root(root_parser(value));
+public:
+    void reset(Recipes & recipes)
+    {
+        parser_.reset();
+        parser_.set_root(root_parser(recipes));
+        parser_.open();
+    }
+
+    void close()
+    {
+        parser_.close();
+    }
+
+    template <typename CharIt>
+    void process(CharIt first, CharIt last)
+    {
+        parser_.process(first, last);
+    }
+
+
+    QString error_string(gubg::parse::polymorphic_tree::ReturnCode, const std::list<std::string> & current_path) const
+    {
+        return QString("Error while parsing at '%1': '%2'");
+    }
+
+    bool is_succesful() const
+    {
+        return parser_.error_code() == gubg::parse::polymorphic_tree::ReturnCode::OK;
+    }
+
+    void set_callback(const gubg::parse::polymorphic_tree::Parser::ErrorCallback & callback)
+    {
+        parser_.set_error_callback(callback);
+    }
+
+private:
+    gubg::parse::polymorphic_tree::Parser parser_;
+    QIODevice * device_;
+};
+
+
+
+StructureParser::StructureParser(QObject *parent)
+    : QObject(parent),
+      p_(new P()),
+      cook_process_(nullptr)
+{
+    p_->set_callback([&](auto error_code, const auto & path){ emit error_occured(p_->error_string(error_code, path));  });
 }
+
+StructureParser::~StructureParser()
+{
+    delete p_;
+}
+
+void StructureParser::attach(CookProcess * process)
+{
+    if (cook_process_)
+    {
+        disconnect(cook_process_, &QIODevice::aboutToClose, this, &StructureParser::close_);
+        disconnect(cook_process_, &CookProcess::standard_out_written, this, &StructureParser::process_);
+    }
+
+    cook_process_ = process;
+
+    if (cook_process_)
+    {
+        connect(cook_process_, &QIODevice::aboutToClose, this, &StructureParser::close_);
+        connect(cook_process_, &CookProcess::standard_out_written, this, &StructureParser::process_);
+    }
+
+
+    recipes_.clear();
+    p_->reset(recipes_);
+}
+
+void StructureParser::close_()
+{
+    p_->close();
+
+    if (cook_process_)
+    {
+        disconnect(cook_process_, &QIODevice::aboutToClose, this, &StructureParser::close_);
+        disconnect(cook_process_, &CookProcess::standard_out_written, this, &StructureParser::process_);
+        cook_process_ = nullptr;
+    }
+
+    emit finished(p_->is_succesful());
+}
+
+void StructureParser::process_(const QByteArray &array)
+{
+    p_->process(array.begin(), array.end());
+}
+
+bool StructureParser::is_finished() const
+{
+    return !cook_process_->isOpen();
+}
+
+bool StructureParser::was_succesful() const
+{
+    return is_finished() && p_->is_succesful();
+}
+
+const Recipes & StructureParser::data() const
+{
+    return recipes_;
+}
+
 
 } } }

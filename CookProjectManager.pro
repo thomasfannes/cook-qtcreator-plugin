@@ -44,14 +44,18 @@ SOURCES += \
     src/cook/project/NinjaBuildStepFactory.cpp \
     src/cook/project/RunSettingsWidget.cpp \
     src/cook/project/RunConfigurationFactory.cpp \
-    src/cook/project/info/RecipesParser.cpp \
-    src/cook/project/info/RecipesManager.cpp \
     src/cook/project/InfoManager.cpp \
     src/cook/project/info/Types.cpp \
     src/cook/project/CookBuildTarget.cpp \
     src/cook/plugin/Manager.cpp \
     src/cook/toolset/ToolManager.cpp \
-    src/cook/project/info/BuildNinjaManager.cpp
+    src/cook/project/info/CookProcess.cpp \
+    src/cook/project/info/StructureParser.cpp \
+    src/cook/project/info/StructureProcess.cpp \
+    src/cook/project/info/StructureManager.cpp \
+    src/cook/project/CookNinjaStep.cpp \
+    src/cook/project/CookNinjaStepFactory.cpp \
+    src/cook/project/CookNinjaStepConfigWidget.cpp
 
 HEADERS += \
     src/cook/plugin/Global.hpp \
@@ -84,19 +88,21 @@ HEADERS += \
     src/cook/project/CookBuildTarget.hpp \
     src/cook/project/RunSettingsWidget.hpp \
     src/cook/project/RunConfigurationFactory.hpp \
-    src/cook/project/info/RecipesParser.hpp \
-    src/cook/project/info/RecipesManager.hpp \
-    src/cook/project/info/AsyncManager.hpp \
-    src/cook/project/info/AsyncManager.hxx \
     src/cook/project/info/Types.hpp \
-    src/cook/project/info/Parser.hpp \
-    src/cook/project/info/Parser.hxx \
     src/cook/project/InfoManager.hpp \
     src/cook/project/InfoManagerType.hpp \
     src/cook/project/ParseRequestRun.hpp \
     src/cook/plugin/Manager.hpp \
     src/cook/toolset/ToolManager.hpp \
-    src/cook/project/info/BuildNinjaManager.hpp
+    src/cook/project/info/CookProcess.hpp \
+    src/cook/project/info/StructureParser.hpp \
+    src/cook/project/info/StructureProcess.hpp \
+    src/cook/project/info/StructureManager.hpp \
+    src/cook/project/info/AsyncProcessManager.hpp \
+    src/cook/project/info/AsyncProcessManager.hxx \
+    src/cook/project/CookNinjaStep.hpp \
+    src/cook/project/CookNinjaStepFactory.hpp \
+    src/cook/project/CookNinjaStepConfigWidget.hpp
 
 OTHER_FILES += \
     CookProjectManager.json.in

@@ -10,6 +10,7 @@
 #include "cook/project/BuildConfigurationFactory.hpp"
 #include "cook/project/RunConfigurationFactory.hpp"
 #include "cook/project/NinjaBuildStepFactory.hpp"
+#include "cook/project/CookNinjaStepFactory.hpp"
 #include "cook/Constants.hpp"
 
 #include <coreplugin/icore.h>
@@ -90,6 +91,7 @@ bool Plugin::initialize(const QStringList &arguments, QString *errorString)
 
     addAutoReleasedObject(new chai::editor::EditorFactory);
     addAutoReleasedObject(new project::NinjaBuildStepFactory);
+    addAutoReleasedObject(new project::CookNinjaStepFactory);
     addAutoReleasedObject(new project::BuildConfigurationFactory);
     addAutoReleasedObject(new project::RunConfigurationFactory);
     addAutoReleasedObject(new Manager);

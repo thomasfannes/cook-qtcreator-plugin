@@ -8,6 +8,7 @@
 #include "cook/Constants.hpp"
 
 #include <coreplugin/progressmanager/progressmanager.h>
+#include <coreplugin/messagemanager.h>
 #include <projectexplorer/target.h>
 #include <projectexplorer/projectexplorerconstants.h>
 #include <projectexplorer/buildinfo.h>
@@ -79,6 +80,11 @@ BuildConfiguration::~BuildConfiguration()
     delete info_mngr_;
 }
 
+Utils::FileName BuildConfiguration::project_file() const
+{
+    return project()->projectFilePath();
+}
+
 QVariantMap BuildConfiguration::toMap() const
 {
     QVariantMap map = ProjectExplorer::BuildConfiguration::toMap();
@@ -93,30 +99,32 @@ bool BuildConfiguration::fromMap(const QVariantMap &map)
     return ProjectExplorer::BuildConfiguration::fromMap(map);
 }
 
-QStringList BuildConfiguration::all_recipes_options() const
+QStringList BuildConfiguration::ninja_build_args() const
 {
-    return { "-g", "recipes.tree", "-f", project_()->projectFilePath().toString(), "-b", buildDirectory().toString() };
-}
+    QStringList args;
+    args << "-g" << "build.ninja";
+    args << "-f" << project_file().toString();
+    args << "-b" << buildDirectory().toString();
+    args << "-n";
 
-QStringList BuildConfiguration::recipe_detail_options(const QString & uri) const
-{
-    return {"-g", "details.tree", "-f", project_()->projectFilePath().toString(), "-b", buildDirectory().toString(), uri };
-}
-
-QStringList BuildConfiguration::build_options(const QString & uri) const
-{
-    QStringList args = {"-g", "build.ninja", "-f", project_()->projectFilePath().toString(), "-b", buildDirectory().toString(), "-n" };
-
-    switch(type_)
+    switch(buildType())
     {
-        case BuildType::Debug:      args << "-c" << "debug"; break;
-        case BuildType::Release:    args << "-c" << "release"; break;
-        default: break;
+        case ProjectExplorer::BuildConfiguration::Debug:
+            args << "-c" << "debug";
+            break;
+
+        case ProjectExplorer::BuildConfiguration::Release:
+            args << "-c" << "release";
+            break;
+
+        default:
+            break;
     }
 
-    args << uri;
+    args << target_uri();
     return args;
 }
+
 
 const info::Recipes & BuildConfiguration::recipes_info_() const
 {
@@ -168,7 +176,7 @@ bool BuildConfiguration::refresh(QFlags<InfoRequestType> flags)
 
 ProjectExplorer::ProjectNode * BuildConfiguration::generate_linear_project() const
 {
-    CookNode * root = new CookNode(project_());
+    CookNode * root = new CookNode(project());
 
     using P = std::pair<const info::Recipe *, RecipeNode *>;
     std::stack<P> todo;
@@ -237,7 +245,7 @@ void BuildConfiguration::refresh_cpp_code_model(CppTools::CppProjectUpdater * cp
         return true;
     });
 
-    const CppTools::ProjectUpdateInfo projectInfoUpdate(project_(), cToolChain, cxxToolChain, k, rpps);
+    const CppTools::ProjectUpdateInfo projectInfoUpdate(project(), cToolChain, cxxToolChain, k, rpps);
     cpp_updater->update(projectInfoUpdate);
 }
 
@@ -246,7 +254,7 @@ const toolset::CookTool * BuildConfiguration::tool() const
     return toolset::KitInformation::cook_tool(target()->kit());
 }
 
-Project * BuildConfiguration::project_() const
+Project * BuildConfiguration::project() const
 {
     return static_cast<Project *>(target()->project());
 }
@@ -257,22 +265,22 @@ void BuildConfiguration::handle_request_started(InfoRequestType /*type*/)
     if (request_.is_on_first())
     {
         clear_error_();
-        project_()->handle_parsing_started_(this, request_.flags());
+        project()->handle_parsing_started_(this, request_.flags());
     }
 }
 
 void BuildConfiguration::handle_request_finished(bool success, InfoRequestType type)
 {
-    auto * project = project_();
+    Project * proj = project();
 
     // toggle the flag
     request_.set(type, success);
-    project->handle_sub_parsing_finished(this, type, success);
+    proj->handle_sub_parsing_finished(this, type, success);
 
     // should we start a new one
     if (request_.is_finished())
     {
-        project->handle_parsing_finished_(this, request_.successes(), request_.failures());
+        proj->handle_parsing_finished_(this, request_.successes(), request_.failures());
     }
     else
     {
@@ -281,7 +289,7 @@ void BuildConfiguration::handle_request_finished(bool success, InfoRequestType t
     }
 
     if (success && type == InfoRequestType::Recipes)
-        emit build_targets_changed();;
+        emit recipes_changed();
 }
 
 void BuildConfiguration::handle_error_occured(const QString & error, InfoRequestType /*type*/)
@@ -299,7 +307,6 @@ void BuildConfiguration::ctor()
     connect(info_mngr_, &InfoManager::started, this, &BuildConfiguration::handle_request_started);
     connect(info_mngr_, &InfoManager::finished, this, &BuildConfiguration::handle_request_finished);
     connect(info_mngr_, &InfoManager::error_occurred, this, &BuildConfiguration::handle_error_occured);
-    connect(this, &BuildConfiguration::build_target_changed, [this]() { refresh(InfoRequestType::Ninja); });
     connect(this, &ProjectExplorer::BuildConfiguration::buildDirectoryChanged, this, &BuildConfiguration::handle_directory_changed);
 }
 
@@ -347,10 +354,6 @@ QString BuildConfiguration::target_uri() const
     }
 }
 
-bool BuildConfiguration::is_valid_uri(const QString & uri) const
-{
-    return !uri.isNull() && find_recipe(uri);
-}
 
 void BuildConfiguration::start_refresh_(InfoRequestType type)
 {
@@ -360,31 +363,17 @@ void BuildConfiguration::start_refresh_(InfoRequestType type)
         Core::ProgressManager::addTask(manager.future(), "Cooking", id);
     };
 
-    auto handle_faulty_uri = [&]()
-    {
-        QString uri = target_uri();
-        if (!is_valid_uri(uri))
-        {
-            handle_request_started(type);
-            handle_error_occured(QString("Unknown uri: <%1>").arg(uri), type);
-            handle_request_finished(false, type);
-            return false;
-        }
-
-        return true;
-    };
-
-
     switch(type)
     {
         case InfoRequestType::Recipes:
+        {
             start_async_process(info_mngr_->recipes(), "Cook.scan.recipes");
+            connect(&info_mngr_->recipes(), &info::StructureManager::process_output, [](const QByteArray & array)
+            {
+                Core::MessageManager::write(QString::fromLatin1(array));
+            });
             break;
-
-        case InfoRequestType::Ninja:
-            if(handle_faulty_uri())
-                start_async_process(info_mngr_->ninja_build(), "Cook.build.ninja");
-            break;
+        }
 
         default:
             bool unknown_info_request_type = false;
@@ -395,7 +384,6 @@ void BuildConfiguration::start_refresh_(InfoRequestType type)
 void BuildConfiguration::set_error_(const QString & error)
 {
     error_ = error;
-
     emit error_occured(error_);
 }
 
@@ -410,7 +398,7 @@ void BuildConfiguration::set_build_target(const CookBuildTarget & target)
         return;
 
     target_ = target;
-    emit build_target_changed();
+    emit target_uri_changed();
 }
 
 const CookBuildTarget & BuildConfiguration::build_target() const

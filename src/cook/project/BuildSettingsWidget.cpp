@@ -1,5 +1,6 @@
 #include "cook/project/BuildSettingsWidget.hpp"
 #include "cook/project/BuildConfiguration.hpp"
+#include "cook/project/Project.hpp"
 #include "projectexplorer/target.h"
 #include "projectexplorer/project.h"
 #include "projectexplorer/buildconfiguration.h"
@@ -17,30 +18,6 @@ BuildSettingsWidget::BuildSettingsWidget(BuildConfiguration *bc)
     fl->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
     setLayout(fl);
 
-    //    build_targets_->setFrameStyle(QFrame::NoFrame);
-    build_targets_->setMinimumHeight(200);
-    build_targets_->setSelectionMode(QAbstractItemView::SingleSelection);
-
-    auto frame = new QFrame(this);
-    frame->setFrameStyle(QFrame::StyledPanel);
-    auto frameLayout = new QVBoxLayout(frame);
-    frameLayout->setMargin(0);
-    frameLayout->addWidget(Core::ItemViewFind::createSearchableWrapper(build_targets_/*, Core::ItemViewFind::LightColored*/));
-
-    fl->addRow(tr("Targets:"), frame);
-
-    connect(bc, &BuildConfiguration::build_targets_changed, this, &BuildSettingsWidget::targets_changed);
-    connect(bc, &BuildConfiguration::build_target_changed, this, &BuildSettingsWidget::target_changed);
-    connect(build_targets_, &QListWidget::itemChanged, this, &BuildSettingsWidget::item_changed);
-
-//    connect(build_step, &CookBuildStep::build_targets_changed, this, &CookBuildStepConfigWidget::build_targets_changed);
-//    connect(build_step, &CookBuildStep::build_target_changed, this, &CookBuildStepConfigWidget::build_target_changed);
-
-
-//    auto fl = new QFormLayout(this);
-//    fl->setContentsMargins(0, -1, 0, -1);
-//    fl->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
-
     // shadow build
     shadow_build_box = new QCheckBox(this);
     shadow_build_box->setEnabled(true);
@@ -57,6 +34,22 @@ BuildSettingsWidget::BuildSettingsWidget(BuildConfiguration *bc)
     build_dir_chooser->setEnvironment(bc->environment());
     build_dir_chooser->setPath(bc_->rawBuildDirectory().toString());
     setDisplayName(tr("Cook Build Manager"));
+
+    //    build_targets_->setFrameStyle(QFrame::NoFrame);
+    build_targets_->setMinimumHeight(200);
+    build_targets_->setSelectionMode(QAbstractItemView::SingleSelection);
+
+    auto frame = new QFrame(this);
+    frame->setFrameStyle(QFrame::StyledPanel);
+    auto frameLayout = new QVBoxLayout(frame);
+    frameLayout->setMargin(0);
+    frameLayout->addWidget(Core::ItemViewFind::createSearchableWrapper(build_targets_/*, Core::ItemViewFind::LightColored*/));
+
+    fl->addRow(tr("Targets:"), frame);
+
+    connect(bc,             &BuildConfiguration::recipes_changed, this, &BuildSettingsWidget::targets_changed);
+    connect(bc,             &BuildConfiguration::target_uri_changed,  this, &BuildSettingsWidget::target_changed);
+    connect(build_targets_, &QListWidget::itemChanged,                  this, &BuildSettingsWidget::item_changed);
 
     connect(bc, &BuildConfiguration::environmentChanged, this, &BuildSettingsWidget::environmentHasChanged);
 }

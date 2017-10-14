@@ -58,12 +58,28 @@ struct Recipe : public Element
 
     QVector<FileInfo> files;
     QStringList include_paths;
+
+    void clear()
+    {
+        children.clear();
+        is_recipe = false;
+        tag.clear();
+        build_target.clear();
+        files.clear();
+        include_paths.clear();
+    }
 };
 
 struct Recipes
 {
     Recipe root;
     QString default_uri;
+
+    void clear()
+    {
+        root.clear();
+        default_uri.clear();
+    }
 };
 
 inline QString display_name(const Element & recipe)

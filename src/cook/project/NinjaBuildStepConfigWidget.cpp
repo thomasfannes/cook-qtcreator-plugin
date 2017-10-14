@@ -26,11 +26,12 @@ NinjaBuildStepConfigWidget::NinjaBuildStepConfigWidget(NinjaBuildStep *ninja_bui
     fl->addRow(tr("Arguments:"), additional_arguments_);
     additional_arguments_->setText(ninja_build_step_->additional_arguments());
 
-    updateDetails();
+    update_details_();
 
     connect(additional_arguments_, &QLineEdit::textChanged, ninja_build_step, &NinjaBuildStep::set_additional_arguments);
-    connect(ninja_build_step, &NinjaBuildStep::additional_arguments_changed, this, &NinjaBuildStepConfigWidget::updateDetails);
-    connect(ninja_build_step_->project(), &ProjectExplorer::Project::environmentChanged, this, &NinjaBuildStepConfigWidget::updateDetails);
+    connect(ninja_build_step, &NinjaBuildStep::additional_arguments_changed,                this, &NinjaBuildStepConfigWidget::update_details_);
+    connect(ninja_build_step_->project(), &ProjectExplorer::Project::environmentChanged,    this, &NinjaBuildStepConfigWidget::update_details_);
+    connect(ninja_build_step_->project(), &ProjectExplorer::Project::buildDirectoryChanged, this, &NinjaBuildStepConfigWidget::update_details_);
 }
 
 QString NinjaBuildStepConfigWidget::displayName() const
@@ -43,7 +44,7 @@ QString NinjaBuildStepConfigWidget::summaryText() const
     return summary_text_;
 }
 
-void NinjaBuildStepConfigWidget::updateDetails()
+void NinjaBuildStepConfigWidget::update_details_()
 {
     ProjectExplorer::BuildConfiguration *bc = ninja_build_step_->buildConfiguration();
     if (!bc)

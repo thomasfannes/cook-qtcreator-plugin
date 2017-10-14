@@ -34,18 +34,35 @@ Project::~Project()
 
 void Project::active_target_changed(ProjectExplorer::Target *target)
 {
+    BuildConfiguration * build_config = target ? static_cast<BuildConfiguration*>(target->activeBuildConfiguration()) : nullptr;
+
     if (connected_target_)
     {
         disconnect(connected_target_, &ProjectExplorer::Target::activeBuildConfigurationChanged, this, &Project::refresh_all);
         disconnect(connected_target_, &ProjectExplorer::Target::kitChanged, this, &Project::refresh_all);
     }
 
+    if (current_build_config_)
+    {
+        disconnect(current_build_config_, &BuildConfiguration::recipes_changed, this, &Project::recipes_changed);
+        disconnect(current_build_config_, &BuildConfiguration::target_uri_changed, this, &Project::target_uri_changed);
+    }
+
+
+
     connected_target_ = target;
+    current_build_config_ = build_config;
 
     if (connected_target_)
     {
         connect(connected_target_, &ProjectExplorer::Target::activeBuildConfigurationChanged, this, &Project::refresh_all);
         connect(connected_target_, &ProjectExplorer::Target::kitChanged, this, &Project::refresh_all);
+    }
+
+    if (current_build_config_)
+    {
+        connect(current_build_config_, &BuildConfiguration::recipes_changed, this, &Project::recipes_changed);
+        connect(current_build_config_, &BuildConfiguration::target_uri_changed, this, &Project::target_uri_changed);
     }
 
     refresh_all();
@@ -58,16 +75,13 @@ BuildConfiguration * Project::active_build_configuration() const
 
 void Project::refresh_all()
 {
-    refresh(InfoRequestType::Recipes | InfoRequestType::Ninja);
+    refresh_(InfoRequestType::Recipes);
 }
 
-void Project::refresh(RequestFlags flags)
+void Project::refresh_(RequestFlags flags)
 {
-    QTC_ASSERT(connected_target_, return);
-    current_build_config_ = static_cast<BuildConfiguration*>(connected_target_->activeBuildConfiguration());
-    QTC_ASSERT(current_build_config_, return);
-
-    current_build_config_->refresh(flags);
+    QTC_ASSERT(active_build_configuration(), return);
+    active_build_configuration()->refresh(flags);
 }
 
 void Project::handle_parsing_started_(BuildConfiguration * configuration, RequestFlags /*flags*/)
@@ -77,7 +91,7 @@ void Project::handle_parsing_started_(BuildConfiguration * configuration, Reques
         return;
 }
 
-void Project::handle_parsing_finished_(BuildConfiguration * configuration, RequestFlags succeeded, RequestFlags /*failed*/)
+void Project::handle_parsing_finished_(BuildConfiguration * configuration, RequestFlags /*succeeded*/, RequestFlags /*failed*/)
 {
     auto * t = activeTarget();
     if(!t || t->activeBuildConfiguration() != configuration)
@@ -92,10 +106,7 @@ void Project::handle_sub_parsing_finished(BuildConfiguration * configuration, In
         return;
 
     if (success && request == InfoRequestType::Recipes)
-    {
         handle_build_recipes_available_();
-        emit recipes_available();
-    }
 
     if(!success)
         ProjectExplorer::TaskHub::addTask(ProjectExplorer::Task::Error, configuration->error(), ProjectExplorer::Constants::TASK_CATEGORY_BUILDSYSTEM);
@@ -145,25 +156,25 @@ void Project::handle_build_recipes_available_()
 {
     activeTarget()->updateDefaultRunConfigurations();
 
-    QTC_ASSERT(current_build_config_, return);
-    setRootProjectNode(current_build_config_->generate_linear_project());
-    current_build_config_->refresh_cpp_code_model(cpp_code_model_updater_);
+    BuildConfiguration * bc = active_build_configuration();
 
-    setDisplayName(info::display_name(current_build_config_->root_book()));
+    QTC_ASSERT(bc, return);
+    setRootProjectNode(bc->generate_linear_project());
+    bc->refresh_cpp_code_model(cpp_code_model_updater_);
 
-    const QString & main_uri = current_build_config_->default_uri();
-    const info::Recipe * active_recipe = current_build_config_->find_recipe(main_uri);
+    setDisplayName(info::display_name(bc->root_book()));
+
+    const QString & main_uri = bc->default_uri();
+    const info::Recipe * active_recipe = bc->find_recipe(main_uri);
     QTC_ASSERT(active_recipe, return);
 
     // add watcher for all the script filenames
     {
         qDeleteAll(project_documents);
-        project_documents.clear();;
+        project_documents.clear();
         for(const Utils::FileName & script_fn : current_build_config_->all_script_files())
             project_documents << new ProjectExplorer::ProjectDocument(constants::COOK_MIME_TYPE, script_fn, [this] { refresh_all(); });
     }
-
-
 }
 
 
