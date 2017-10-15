@@ -12,6 +12,7 @@
 #include <projectexplorer/target.h>
 #include <projectexplorer/projectexplorerconstants.h>
 #include <projectexplorer/buildinfo.h>
+#include <projectexplorer/taskhub.h>
 #include <utils/qtcassert.h>
 #include <utils/algorithm.h>
 #include <stack>
@@ -182,6 +183,8 @@ ProjectExplorer::ProjectNode * BuildConfiguration::generate_linear_project() con
     std::stack<P> todo;
     todo.push(std::make_pair(&root_book(), nullptr));
 
+    QSet<Utils::FileName> recipes;
+
     while (!todo.empty())
     {
         P p = todo.top();
@@ -196,8 +199,11 @@ ProjectExplorer::ProjectNode * BuildConfiguration::generate_linear_project() con
             rn->addNestedNode(n);
         }
 
-        ChaiScriptNode * cn = new ChaiScriptNode(recipe.script);
-        rn->addNode(cn);
+        // add all the recipes
+        recipes.unite(recipe.all_scripts);
+        if (!recipe.script.isEmpty())
+            recipes.insert(recipe.script);
+
         rn->compress();
 
         // add to the parent level
@@ -209,6 +215,21 @@ ProjectExplorer::ProjectNode * BuildConfiguration::generate_linear_project() con
         // and visit the children
         for(const auto & p : recipe.children)
             todo.push(std::make_pair(&p, rn));
+    }
+
+
+    {
+        ProjectExplorer::FolderNode * recipes_folder = new ProjectExplorer::FolderNode(project()->projectDirectory());
+
+        for(const auto & fn : recipes)
+        {
+            ChaiScriptNode * cn = new ChaiScriptNode(fn);
+            recipes_folder->addNestedNode(cn);
+        }
+
+        recipes_folder->setDisplayName("recipes");
+
+        root->addNode(recipes_folder);
     }
 
     return root;
@@ -259,7 +280,7 @@ Project * BuildConfiguration::project() const
     return static_cast<Project *>(target()->project());
 }
 
-void BuildConfiguration::handle_request_started(InfoRequestType /*type*/)
+void BuildConfiguration::handle_request_started()
 {
     // before a request, make sure that the build directory exists
     if (request_.is_on_first())
@@ -294,6 +315,7 @@ void BuildConfiguration::handle_request_finished(bool success, InfoRequestType t
 
 void BuildConfiguration::handle_error_occured(const QString & error, InfoRequestType /*type*/)
 {
+    ProjectExplorer::TaskHub::addTask(ProjectExplorer::Task::Error, error, ProjectExplorer::Constants::TASK_CATEGORY_BUILDSYSTEM);
     set_error_(error);
 }
 
@@ -308,6 +330,14 @@ void BuildConfiguration::ctor()
     connect(info_mngr_, &InfoManager::finished, this, &BuildConfiguration::handle_request_finished);
     connect(info_mngr_, &InfoManager::error_occurred, this, &BuildConfiguration::handle_error_occured);
     connect(this, &ProjectExplorer::BuildConfiguration::buildDirectoryChanged, this, &BuildConfiguration::handle_directory_changed);
+
+    connect(info_mngr_, &InfoManager::started,
+            [](const QString & command) {
+                Core::MessageManager::write(QString("Executing %1").arg(command));
+            }
+    );
+
+    connect(info_mngr_, &InfoManager::process_output, [](const QString & output) { Core::MessageManager::write(output); });
 }
 
 const info::Recipe * BuildConfiguration::find_recipe(const QString & uri) const
@@ -368,10 +398,11 @@ void BuildConfiguration::start_refresh_(InfoRequestType type)
         case InfoRequestType::Recipes:
         {
             start_async_process(info_mngr_->recipes(), "Cook.scan.recipes");
-            connect(&info_mngr_->recipes(), &info::StructureManager::process_output, [](const QByteArray & array)
-            {
-                Core::MessageManager::write(QString::fromLatin1(array));
-            });
+
+
+
+
+
             break;
         }
 

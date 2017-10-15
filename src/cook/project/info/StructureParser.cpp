@@ -13,6 +13,7 @@ TAG(structure);
 TAG(book);
 TAG(recipe);
 TAG(file);
+TAG(script);
 TAG(include_path);
 TAG(default);
 #undef TAG
@@ -108,6 +109,16 @@ std::shared_ptr<RecipeParser> recipe_parser()
     return p;
 }
 
+using ScriptParser =gubg::parse::polymorphic_tree::TypedParser<Utils::FileName>;
+std::shared_ptr<ScriptParser> script_parser()
+{
+    auto p = std::make_shared<ScriptParser>();
+    auto extractor = [](Utils::FileName & v) -> Utils::FileName & { return v; };
+    p->single_attr<Utils::FileName>(key_path, extractor, convert_file_name)->set_required();
+
+    return p;
+}
+
 using BookParser = gubg::parse::polymorphic_tree::TypedParser<Recipe>;
 std::shared_ptr<BookParser> book_parser()
 {
@@ -115,13 +126,19 @@ std::shared_ptr<BookParser> book_parser()
 
     p->single_attr(key_uri, &Recipe::uri, to_string)->set_required();
     p->single_attr(key_display_name, &Recipe::name, to_string);
-    p->single_attr(key_script, &Recipe::script, convert_file_name)->set_required();
     p->single_attr(key_tag, &Recipe::tag, to_string);
 
-    auto inserter = [](Recipe & recipe, auto first, auto last) { for(; first != last; ++first) recipe.children.append(*first); };
 
-    p->multi_child<Recipe>(tag_book, inserter, book_parser);
-    p->multi_child<Recipe>(tag_recipe, inserter, recipe_parser);
+    {
+        auto inserter = [](Recipe & recipe, auto first, auto last) { for(; first != last; ++first) recipe.all_scripts.insert(*first); };
+        p->multi_child<Utils::FileName>(tag_script, inserter, script_parser);
+    }
+
+    {
+        auto inserter = [](Recipe & recipe, auto first, auto last) { for(; first != last; ++first) recipe.children.append(*first); };
+        p->multi_child<Recipe>(tag_book, inserter, book_parser);
+        p->multi_child<Recipe>(tag_recipe, inserter, recipe_parser);
+    }
 
     p->set_allocator([]() { return Recipe(false); });
 
@@ -187,9 +204,16 @@ public:
     }
 
 
-    QString error_string(gubg::parse::polymorphic_tree::ReturnCode, const std::list<std::string> & current_path) const
+    QString error_string(gubg::parse::polymorphic_tree::ReturnCode rt, const std::list<std::string> & current_path) const
     {
-        return QString("Error while parsing at '%1': '%2'");
+        std::ostringstream oss;
+        oss << "Error while parsing: ";
+
+        for(auto it = current_path.begin(); it != current_path.end(); ++it)
+            oss << (it != current_path.begin() ? "/" : "") << *it;
+        oss << " [" << rt << "]";
+
+        return QString::fromStdString(oss.str());
     }
 
     bool is_succesful() const

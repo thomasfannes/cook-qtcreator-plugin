@@ -56,6 +56,7 @@ struct Recipe : public Element
     TargetType type;
     Utils::FileName build_target;
 
+    QSet<Utils::FileName> all_scripts;
     QVector<FileInfo> files;
     QStringList include_paths;
 

@@ -40,6 +40,7 @@ bool AsyncProcessManager<Derived, Process>::start_async()
         connect(process, &Process::finished,               this, &AsyncProcessManager::on_finished_);
         connect(process, &Process::error_occured,          this, &AsyncProcessManager::error_occured);
         connect(process, &Process::warning_occured,        this, &AsyncProcessManager::warning_occured);
+        connect(process, &Process::standard_error_written, this, &AsyncProcessManager::process_output);
         connect(process, &Process::standard_out_written,   this, &AsyncProcessManager::process_output);
 
         if (!process_starter(*process))

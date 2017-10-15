@@ -1,8 +1,8 @@
 isEmpty(IDE_SOURCE_TREE): IDE_SOURCE_TREE = "/home/tfannes/programming/CookProjectManager/qt-creator"
-isEmpty(IDE_BUILD_TREE): IDE_BUILD_TREE = "/home/tfannes/programming/CookProjectManager/build-qtcreator-debug"
+#isEmpty(IDE_BUILD_TREE): IDE_BUILD_TREE = "/home/tfannes/programming/CookProjectManager/build-qtcreator-debug"
 
-#isEmpty(IDE_BUILD_TREE): IDE_BUILD_TREE = "/usr"
-#USE_USER_DESTDIR = yes
+isEmpty(IDE_BUILD_TREE): IDE_BUILD_TREE = "/usr"
+USE_USER_DESTDIR = yes
 
 
 QTC_PLUGIN_NAME = CookProjectManager

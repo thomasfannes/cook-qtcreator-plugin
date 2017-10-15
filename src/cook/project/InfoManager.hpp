@@ -22,9 +22,10 @@ public:
     info::StructureManager & recipes()                { return *recipes_mgr_; }
 
 signals:
-    void started(InfoRequestType type);
+    void started(const QString & command, InfoRequestType type);
     void error_occurred(const QString & error, InfoRequestType type);
     void finished(bool ok, InfoRequestType type);
+    void process_output(const QString & output);
 
 private:
     using ParserFlags = QFlags<InfoRequestType>;
