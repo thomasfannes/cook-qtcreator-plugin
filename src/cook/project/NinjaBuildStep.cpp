@@ -45,7 +45,7 @@ NinjaBuildStep::NinjaBuildStep(ProjectExplorer::BuildStepList * parent, Core::Id
 }
 
 NinjaBuildStep::NinjaBuildStep(ProjectExplorer::BuildStepList *parent, NinjaBuildStep * bs)
-    : ProjectExplorer::AbstractProcessStep(parent, constants::NINJA_BUILD_STEP_ID),
+    : ProjectExplorer::AbstractProcessStep(parent, bs),
       build_targets_(bs->build_targets_),
       additional_arguments_(bs->additional_arguments()),
       clean_(bs->clean_)
@@ -118,7 +118,7 @@ void NinjaBuildStep::set_additional_arguments(const QString &list)
 
     additional_arguments_ = list;
 
-    emit additional_arguments_changed(list);
+    emit additional_arguments_changed(additional_arguments_);
 }
 
 QString NinjaBuildStep::additional_arguments() const

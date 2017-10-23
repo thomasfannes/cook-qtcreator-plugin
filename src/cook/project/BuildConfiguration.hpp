@@ -33,7 +33,7 @@ public:
     virtual QVariantMap toMap() const;
 
     const toolset::CookTool * tool() const;
-    QStringList ninja_build_args() const;
+    QStringList ninja_build_args(const QStringList &additional_arguments = QStringList()) const;
     Utils::FileName project_file() const;
     Utils::FileNameList all_script_files() const;
 

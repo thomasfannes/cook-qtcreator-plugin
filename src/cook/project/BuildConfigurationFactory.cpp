@@ -97,8 +97,8 @@ ProjectExplorer::BuildConfiguration * BuildConfigurationFactory::create(ProjectE
     {
         // the cook step
         {
-            Q_ASSERT(buildSteps);
-            auto cookStep = new CookNinjaStep(buildSteps);
+            Q_ASSERT(cleanSteps);
+            auto cookStep = new CookNinjaStep(cleanSteps);
             cleanSteps->insertStep(0, cookStep);
         }
 

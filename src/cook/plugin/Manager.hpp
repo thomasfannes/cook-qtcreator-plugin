@@ -13,13 +13,12 @@ class Manager : public QObject
 public:
     Manager();
 
-
 private:
     void update_actions_();
     void rescan_active_project_();
 
     QAction * rescan_project_;
-
+    QAction * goto_recipe_;
 };
 
 } }

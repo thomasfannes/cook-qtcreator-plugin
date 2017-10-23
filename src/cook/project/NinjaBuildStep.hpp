@@ -2,6 +2,7 @@
 #define HEADER_cook_project_NinjaBuildStep_hpp_ALREADY_INCLUDED
 
 #include <projectexplorer/abstractprocessstep.h>
+#include <QDebug>
 
 namespace cook { namespace project {
 

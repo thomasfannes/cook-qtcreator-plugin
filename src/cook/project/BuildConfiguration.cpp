@@ -100,13 +100,14 @@ bool BuildConfiguration::fromMap(const QVariantMap &map)
     return ProjectExplorer::BuildConfiguration::fromMap(map);
 }
 
-QStringList BuildConfiguration::ninja_build_args() const
+QStringList BuildConfiguration::ninja_build_args(const QStringList & additional_arguments) const
 {
     QStringList args;
+
     args << "-g" << "build.ninja";
     args << "-f" << project_file().toString();
     args << "-b" << buildDirectory().toString();
-    args << "-n";
+
 
     switch(buildType())
     {
@@ -122,6 +123,9 @@ QStringList BuildConfiguration::ninja_build_args() const
             break;
     }
 
+    args << additional_arguments;
+
+    args << "-n";
     args << target_uri();
     return args;
 }

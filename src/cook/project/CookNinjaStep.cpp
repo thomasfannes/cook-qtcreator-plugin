@@ -16,7 +16,7 @@ CookNinjaStep::CookNinjaStep(ProjectExplorer::BuildStepList *bsl)
 }
 
 CookNinjaStep::CookNinjaStep(ProjectExplorer::BuildStepList *bsl, CookNinjaStep *bs)
-    : ProjectExplorer::AbstractProcessStep(bsl, constants::COOK_BUILD_STEP_ID),
+    : ProjectExplorer::AbstractProcessStep(bsl, bs),
       clean_(bs->clean_)
 {
     ctor_();
@@ -64,7 +64,8 @@ bool CookNinjaStep::get_process_parameters_(ProjectExplorer::ProcessParameters &
     pp.setCommand(tool->exec_file().absoluteFilePath());
     {
         QString args;
-        Utils::QtcProcess::addArgs(&args, bc->ninja_build_args());
+
+        Utils::QtcProcess::addArgs(&args, bc->ninja_build_args(additional_arguments_.split(' ')));
         pp.setArguments(args);
     }
     pp.resolveAll();
@@ -131,7 +132,7 @@ bool CookNinjaStep::init(QList<const BuildStep *> & earlierSteps)
     pp->setCommand(tool->exec_file().absoluteFilePath());
     {
         QString args;
-        Utils::QtcProcess::addArgs(&args, bc->ninja_build_args());
+        Utils::QtcProcess::addArgs(&args, bc->ninja_build_args(additional_arguments_.split(' ')));
         pp->setArguments(args);
     }
 
@@ -155,6 +156,23 @@ ProjectExplorer::BuildStepConfigWidget * CookNinjaStep::createConfigWidget()
 void CookNinjaStep::ctor_()
 {
     setDisplayName("cook ninja step");
+}
+
+void CookNinjaStep::set_additional_arguments(const QString & list)
+{
+    if (list == additional_arguments_)
+        return;
+
+    additional_arguments_ = list;
+
+    qDebug() << "called" << list;
+
+    emit additional_arguments_changed(additional_arguments_);
+}
+
+QString CookNinjaStep::additional_arguments() const
+{
+    return additional_arguments_;
 }
 
 } }

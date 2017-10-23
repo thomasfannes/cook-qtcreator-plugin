@@ -15,20 +15,25 @@ namespace cook { namespace plugin {
 
 namespace {
 
-const char RESCAN_PROJECT[] = "CookPlugin.RescanProject";
-const char RUN_COOK_CONTEXT[] = "CookPplugin.RunCook.Context";
+const char RESCAN_PROJECT[] = "CookPlugin.Global.RescanProject";
+const char RUN_COOK_CONTEXT[] = "CookPlugin.Context.RescanProject";
+const char GOTO_RECIPE_CONTEXT[] = "CookPlugin.Context.GotoRecipe";
 
 }
 
 Manager::Manager()
-    : rescan_project_(new QAction(QIcon(), tr("Rescan recipes"), this))
+    : rescan_project_(new QAction(QIcon(), tr("Rescan recipes"), this)),
+      goto_recipe_(new QAction(QIcon(), tr("Goto recipe"), this))
 {
     const Core::Context globalContext(Core::Constants::C_GLOBAL);
     const Core::Context projectContext(constants::COOK_PROJECT_CONTEXT);
 
 
+
+
     Core::ActionContainer *mbuild       = Core::ActionManager::actionContainer(ProjectExplorer::Constants::M_BUILDPROJECT);
     Core::ActionContainer *mproject     = Core::ActionManager::actionContainer(ProjectExplorer::Constants::M_PROJECTCONTEXT);
+    Core::ActionContainer *msubproject  = Core::ActionManager::actionContainer(ProjectExplorer::Constants::M_SUBPROJECTCONTEXT);
 
     // add the menu action
     {
@@ -44,6 +49,13 @@ Manager::Manager()
         mproject->addAction(command, ProjectExplorer::Constants::G_PROJECT_BUILD);
     }
 
+    // add the context goto recipe action
+    {
+        Core::Command * command = Core::ActionManager::registerAction(goto_recipe_, GOTO_RECIPE_CONTEXT, projectContext);
+        command->setAttribute(Core::Command::CA_Hide);
+        msubproject->addAction(command, ProjectExplorer::Constants::G_PROJECT_BUILD);
+    }
+
     connect(rescan_project_, &QAction::triggered, this, &Manager::rescan_active_project_);
     connect(ProjectExplorer::SessionManager::instance(), &ProjectExplorer::SessionManager::startupProjectChanged, this, &Manager::update_actions_);
     connect(ProjectExplorer::BuildManager::instance(), &ProjectExplorer::BuildManager::buildStateChanged, this, &Manager::update_actions_);
@@ -55,6 +67,7 @@ void Manager::update_actions_()
     project::Project * project = qobject_cast<project::Project *>(ProjectExplorer::SessionManager::startupProject());
     const bool visible = project && !ProjectExplorer::BuildManager::isBuilding(project);
     rescan_project_->setVisible(visible);
+    goto_recipe_->setVisible(visible);
 }
 
 void Manager::rescan_active_project_()

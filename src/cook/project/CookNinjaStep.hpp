@@ -2,6 +2,7 @@
 #define HEADER_cook_project_CookNinjaStep_hpp_ALREADY_INCLUDED
 
 #include <projectexplorer/abstractprocessstep.h>
+#include <QDebug>
 
 namespace cook { namespace project {
 
@@ -20,6 +21,11 @@ public:
     virtual ProjectExplorer::BuildStepConfigWidget *createConfigWidget() override;
 
     void set_clean(bool clean) { clean_ = clean; }
+    void set_additional_arguments(const QString & arguments);
+    QString additional_arguments() const;
+
+signals:
+    void additional_arguments_changed(const QString & args);
 
 protected:
     CookNinjaStep(ProjectExplorer::BuildStepList *bsl, CookNinjaStep *bs);
@@ -29,8 +35,10 @@ private:
     bool get_process_parameters_(ProjectExplorer::ProcessParameters & pp);
     void ctor_();
     bool clean_ = false;
+    QString additional_arguments_;
 };
 
 } }
 
 #endif
+

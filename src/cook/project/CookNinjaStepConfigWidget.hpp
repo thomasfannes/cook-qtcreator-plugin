@@ -23,6 +23,7 @@ private:
 
     CookNinjaStep *cook_ninja_step_;
     QString summary_text_;
+    QLineEdit * additional_arguments_;
 };
 
 

@@ -96,11 +96,6 @@ bool Plugin::initialize(const QStringList &arguments, QString *errorString)
     addAutoReleasedObject(new project::RunConfigurationFactory);
     addAutoReleasedObject(new Manager);
 
-
-
-//    connect(ProjectExplorer::ProjectTree::instance(), &ProjectExplorer::ProjectTree::currentNodeChanged, this, &Plugin::updateContextActions);
-
-
     return true;
 }
 

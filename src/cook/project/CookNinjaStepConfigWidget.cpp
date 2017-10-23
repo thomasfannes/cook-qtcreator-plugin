@@ -22,10 +22,16 @@ CookNinjaStepConfigWidget::CookNinjaStepConfigWidget(CookNinjaStep *cook_ninja_s
     fl->setFieldGrowthPolicy(QFormLayout::ExpandingFieldsGrow);
     setLayout(fl);
 
+    additional_arguments_ = new QLineEdit(this);
+    fl->addRow(tr("Arguments:"), additional_arguments_);
+    additional_arguments_->setText(cook_ninja_step_->additional_arguments());
+
     update_details_();
 
     Project * project = static_cast<Project*>(cook_ninja_step_->project());
 
+    connect(additional_arguments_, &QLineEdit::textChanged, cook_ninja_step, &CookNinjaStep::set_additional_arguments);
+    connect(cook_ninja_step, &CookNinjaStep::additional_arguments_changed,                this, &CookNinjaStepConfigWidget::update_details_);
     connect(project, &Project::environmentChanged,      this, &CookNinjaStepConfigWidget::update_details_);
     connect(project, &Project::buildDirectoryChanged,   this, &CookNinjaStepConfigWidget::update_details_);
     connect(project, &Project::target_uri_changed,      this, &CookNinjaStepConfigWidget::update_details_);
@@ -45,9 +51,12 @@ void CookNinjaStepConfigWidget::update_details_()
 {
     ProjectExplorer::ProcessParameters param;
     if (cook_ninja_step_->get_process_parameters_(param))
+    {
         summary_text_ = param.summary(displayName());
+        qDebug() << summary_text_;
+    }
     else
-        summary_text_ = "<b>Build correctly configured</b>";
+        summary_text_ = "<b>Build incorrectly configured</b>";
 
     emit updateSummary();
 }
