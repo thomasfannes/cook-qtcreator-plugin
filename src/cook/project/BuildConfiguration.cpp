@@ -122,8 +122,7 @@ QStringList BuildConfiguration::ninja_build_args(const QStringList & additional_
         default:
             break;
     }
-
-    args << additional_arguments;
+    args.append(additional_arguments);
 
     args << "-n";
     args << target_uri();
@@ -160,6 +159,11 @@ Utils::FileNameList BuildConfiguration::all_script_files() const
     return lst;
 }
 
+QList<info::Error> BuildConfiguration::all_parse_errors() const
+{
+    return recipes_info_().errors;
+}
+
 QString BuildConfiguration::default_uri() const
 {
     return recipes_info_().default_uri;
@@ -179,11 +183,25 @@ bool BuildConfiguration::refresh(QFlags<InfoRequestType> flags)
     return true;
 }
 
+namespace  {
+
+CookNode::Type find_node_type(CookNode * root, const info::Recipe & recipe)
+{
+    if (root == nullptr)
+        return CookNode::Type_RootNode;
+    else if (recipe.is_recipe)
+        return CookNode::Type_RecipeNode;
+    else
+        return CookNode::Type_BookNode;
+}
+
+}
+
 ProjectExplorer::ProjectNode * BuildConfiguration::generate_linear_project() const
 {
-    CookNode * root = new CookNode(project());
+    CookNode * root = nullptr;
 
-    using P = std::pair<const info::Recipe *, RecipeNode *>;
+    using P = std::pair<const info::Recipe *, CookNode *>;
     std::stack<P> todo;
     todo.push(std::make_pair(&root_book(), nullptr));
 
@@ -195,8 +213,7 @@ ProjectExplorer::ProjectNode * BuildConfiguration::generate_linear_project() con
         todo.pop();
 
         const info::Recipe & recipe = *p.first;
-
-        RecipeNode * rn = new RecipeNode(recipe);
+        CookNode * rn = new CookNode(recipe, find_node_type(root, recipe));
         for(const info::FileInfo & f : recipe.files)
         {
             auto * n = new ProjectExplorer::FileNode(f.file, convert(f.type), false);
@@ -212,7 +229,7 @@ ProjectExplorer::ProjectNode * BuildConfiguration::generate_linear_project() con
 
         // add to the parent level
         if (p.second == nullptr)
-            root->addNode(rn);
+            root = rn;
         else
             p.second->addNode(rn);
 
@@ -223,7 +240,7 @@ ProjectExplorer::ProjectNode * BuildConfiguration::generate_linear_project() con
 
 
     {
-        ProjectExplorer::FolderNode * recipes_folder = new ProjectExplorer::FolderNode(project()->projectDirectory());
+        RecipesNode * recipes_folder = new RecipesNode(project()->projectDirectory());
 
         for(const auto & fn : recipes)
         {

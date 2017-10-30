@@ -36,7 +36,7 @@ public:
 
 private:
     void on_finished_(bool);
-    void on_success_(const Process & /*process*/) {}
+    void on_process_finished_(bool success, const Process * process) {}
 
     const BuildConfiguration * config_;
     QFuture<Process*> future_;

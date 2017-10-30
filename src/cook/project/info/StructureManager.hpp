@@ -21,7 +21,7 @@ private:
     friend class AsyncProcessManager;
 
     std::function<bool (StructureProcess &)> generate_process_starter(const BuildConfiguration & config) const;
-    void on_success_(const StructureProcess & process);
+    void on_process_finished_(bool success, const StructureProcess * process);
 
     Recipes recipes_;
 };

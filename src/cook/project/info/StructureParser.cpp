@@ -13,6 +13,7 @@ TAG(structure);
 TAG(book);
 TAG(recipe);
 TAG(file);
+TAG(error);
 TAG(script);
 TAG(include_path);
 TAG(default);
@@ -26,6 +27,9 @@ KEY(display_name);
 KEY(type);
 KEY(build_target);
 KEY(path);
+KEY(line);
+KEY(column);
+KEY(error);
 #undef KEY
 
 TargetType convert_target_type(const std::string & v)
@@ -58,6 +62,11 @@ Utils::FileName convert_file_name(const std::string & v)
 QString to_string(const std::string & v)
 {
     return QString::fromStdString(v);
+}
+
+int to_int(const std::string & v)
+{
+    return std::atoi(v.c_str());
 }
 
 
@@ -156,6 +165,18 @@ std::shared_ptr<DefaultUriParser> default_uri_parser()
     return p;
 }
 
+using ErrorParser = gubg::parse::polymorphic_tree::TypedParser<Error>;
+std::shared_ptr<ErrorParser> error_parser()
+{
+    auto p = std::make_shared<ErrorParser>();
+    p->single_attr<int>(key_line, &Error::line, to_int);
+    p->single_attr<int>(key_column, &Error::column, to_int);
+    p->single_attr<QString>(key_error, &Error::error, to_string)->set_required();
+    p->single_attr<Utils::FileName>(key_script, &Error::script, convert_file_name)->set_required();
+
+    return p;
+}
+
 using CurRecipesParser = gubg::parse::polymorphic_tree::TypedParser<Recipes>;
 std::shared_ptr<CurRecipesParser> recipes_parser()
 {
@@ -169,6 +190,8 @@ std::shared_ptr<CurRecipesParser> recipes_parser()
     return p;
 }
 
+
+
 using RootParser = gubg::parse::polymorphic_tree::RootElement<Recipes>;
 std::shared_ptr<RootParser> root_parser(Recipes & recipe)
 {
@@ -176,6 +199,9 @@ std::shared_ptr<RootParser> root_parser(Recipes & recipe)
 
     auto setter = [](Recipes & lhs, const Recipes & rhs){ lhs = rhs; };
     p->single_child<Recipes>(tag_structure, setter, recipes_parser);
+
+    auto inserter = [](Recipes & recipes, auto first, auto last) { for(; first != last; ++first) recipes.errors.append(*first); };
+    p->multi_child<Error>(tag_error, inserter, error_parser);
 
     return p;
 }

@@ -65,7 +65,7 @@ bool CookNinjaStep::get_process_parameters_(ProjectExplorer::ProcessParameters &
     {
         QString args;
 
-        Utils::QtcProcess::addArgs(&args, bc->ninja_build_args(additional_arguments_.split(' ')));
+        Utils::QtcProcess::addArgs(&args, bc->ninja_build_args(addition_arguments_lists()));
         pp.setArguments(args);
     }
     pp.resolveAll();
@@ -132,7 +132,7 @@ bool CookNinjaStep::init(QList<const BuildStep *> & earlierSteps)
     pp->setCommand(tool->exec_file().absoluteFilePath());
     {
         QString args;
-        Utils::QtcProcess::addArgs(&args, bc->ninja_build_args(additional_arguments_.split(' ')));
+        Utils::QtcProcess::addArgs(&args, bc->ninja_build_args(addition_arguments_lists()));
         pp->setArguments(args);
     }
 
@@ -141,6 +141,14 @@ bool CookNinjaStep::init(QList<const BuildStep *> & earlierSteps)
 
 
     return ProjectExplorer::AbstractProcessStep::init(earlierSteps);
+}
+
+QStringList CookNinjaStep::addition_arguments_lists()
+{
+    if (additional_arguments_.isEmpty())
+        return QStringList();
+    else
+        return additional_arguments_.split(' ');
 }
 
 void CookNinjaStep::run(QFutureInterface<bool> & interface)
@@ -164,8 +172,6 @@ void CookNinjaStep::set_additional_arguments(const QString & list)
         return;
 
     additional_arguments_ = list;
-
-    qDebug() << "called" << list;
 
     emit additional_arguments_changed(additional_arguments_);
 }

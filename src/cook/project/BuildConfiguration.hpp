@@ -44,6 +44,7 @@ public:
     QList<CookBuildTarget> all_build_targets() const;
     QList<CookBuildTarget> all_run_targets() const;
     QList<info::Element> all_targets() const;
+    QList<info::Error> all_parse_errors() const;
 
     void set_build_target(const CookBuildTarget & target);
     const CookBuildTarget & build_target() const;

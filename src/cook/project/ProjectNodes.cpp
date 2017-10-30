@@ -3,18 +3,25 @@
 
 namespace cook { namespace project {
 
-CookNode::CookNode(Project * project)
-    : ProjectExplorer::ProjectNode(project->projectDirectory()),
-      project_(project)
+CookNode::CookNode(const info::Recipe & recipe, const Type &type)
+    : ProjectExplorer::ProjectNode(recipe.script.parentDir())
 {
-    setIcon(QIcon(":/icon/cook"));
-}
+    setDisplayName(info::display_name(recipe));
 
-CookNode::CookNode(Project * project, const Utils::FileName & dir)
-    : ProjectExplorer::ProjectNode(dir),
-      project_(project)
-{
-    setIcon(QIcon(":/icon/cook"));
+    switch(type)
+    {
+        case Type::Type_BookNode:
+            setIcon((QIcon(":/icon/book")));
+            break;
+
+        case Type::Type_RecipeNode:
+            setIcon((QIcon(":/icon/recipe")));
+            break;
+
+        case Type::Type_RootNode:
+            setIcon((QIcon(":/icon/cook")));
+            break;
+    }
 }
 
 bool CookNode::showInSimpleTree() const
@@ -22,28 +29,21 @@ bool CookNode::showInSimpleTree() const
     return false;
 }
 
-QString CookNode::tooltip() const
-{
-    return project_->displayName();
-}
-
-RecipeNode::RecipeNode(const info::Recipe &recipe)
-    : ProjectExplorer::ProjectNode(recipe.script.parentDir())
-{
-    QString name = recipe.tag;
-    if(!recipe.name.isEmpty())
-        name.append(QString(" (%1)").arg(recipe.name));
-
-    setDisplayName( name );
-    setIcon(QIcon(":/icon/recipe"));
-}
-
-void RecipeNode::compress()
+void CookNode::compress()
 {
     for(auto * n : nodes())
         if (auto * f = n->asFolderNode())
             f->compress();
 }
+
+RecipesNode::RecipesNode(const Utils::FileName & dir)
+    : ProjectExplorer::ProjectNode(dir)
+{
+    setIcon(QIcon(":/icon/book"));
+    setPriority(-100);
+}
+
+
 
 ChaiScriptNode::ChaiScriptNode(const Utils::FileName & fn)
     : ProjectExplorer::FileNode(fn, ProjectExplorer::FileType::Unknown, false)

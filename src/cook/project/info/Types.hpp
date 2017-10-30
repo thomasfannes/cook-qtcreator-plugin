@@ -71,10 +71,20 @@ struct Recipe : public Element
     }
 };
 
+struct Error
+{
+    Utils::FileName script;
+    int line;
+    int column;
+    QString error;
+};
+
+
 struct Recipes
 {
     Recipe root;
     QString default_uri;
+    QList<Error> errors;
 
     void clear()
     {
@@ -87,8 +97,38 @@ inline QString display_name(const Element & recipe)
 {
     QString val = recipe.uri;
 
-    if (!recipe.name.isEmpty())
-        val.append(QString(" (%1)").arg(recipe.name));
+    if (val.isEmpty())
+    {
+        if (!recipe.name.isEmpty())
+            val = recipe.name;
+        else
+            val = recipe.script.parentDir().toString();
+    }
+    else
+    {
+        if (!recipe.name.isEmpty())
+            val.append(QString(" (%1)").arg(recipe.name));
+    }
+
+    return val;
+}
+
+inline QString display_name(const Recipe & recipe)
+{
+    QString val = recipe.tag;
+
+    if (val.isEmpty())
+    {
+        if (!recipe.name.isEmpty())
+            val = recipe.name;
+        else
+            val = recipe.script.parentDir().toString();
+    }
+    else
+    {
+        if (!recipe.name.isEmpty())
+            val.append(QString(" (%1)").arg(recipe.name));
+    }
 
     return val;
 }

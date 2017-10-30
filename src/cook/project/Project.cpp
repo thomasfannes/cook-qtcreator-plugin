@@ -86,6 +86,8 @@ void Project::refresh_(RequestFlags flags)
 
 void Project::handle_parsing_started_(BuildConfiguration * configuration, RequestFlags /*flags*/)
 {
+    ProjectExplorer::TaskHub::clearTasks();
+
     auto * t = activeTarget();
     if(!t || t->activeBuildConfiguration() != configuration)
         return;
@@ -105,9 +107,13 @@ void Project::handle_sub_parsing_finished(BuildConfiguration * configuration, In
     if (!t || t->activeBuildConfiguration() != configuration)
         return;
 
-    if (success && request == InfoRequestType::Recipes)
-        handle_build_recipes_available_();
-
+    if (request == InfoRequestType::Recipes)
+    {
+        if (success)
+            handle_build_recipes_available_();
+        else
+            handle_parsing_error_();
+    }
     if(!success)
         ProjectExplorer::TaskHub::addTask(ProjectExplorer::Task::Error, configuration->error(), ProjectExplorer::Constants::TASK_CATEGORY_BUILDSYSTEM);
 }
@@ -152,6 +158,21 @@ bool Project::setupTarget(ProjectExplorer::Target *t)
     return true;
 }
 
+void Project::handle_parsing_error_()
+{
+    BuildConfiguration * bc = active_build_configuration();
+    for(const info::Error & error : bc->all_parse_errors())
+    {
+        ProjectExplorer::TaskHub::addTask(
+                    ProjectExplorer::Task::Error,
+                    error.error,
+                    ProjectExplorer::Constants::TASK_CATEGORY_BUILDSYSTEM,
+                    error.script,
+                    error.line
+                    );
+    }
+}
+
 void Project::handle_build_recipes_available_()
 {
     activeTarget()->updateDefaultRunConfigurations();
@@ -159,10 +180,10 @@ void Project::handle_build_recipes_available_()
     BuildConfiguration * bc = active_build_configuration();
 
     QTC_ASSERT(bc, return);
-    setRootProjectNode(bc->generate_linear_project());
+    auto root = bc->generate_linear_project();
+    setRootProjectNode(root);
     bc->refresh_cpp_code_model(cpp_code_model_updater_);
-
-    setDisplayName(info::display_name(bc->root_book()));
+    setDisplayName(rootProjectNode()->displayName());
 
     const QString & main_uri = bc->default_uri();
     const info::Recipe * active_recipe = bc->find_recipe(main_uri);

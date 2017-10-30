@@ -48,6 +48,7 @@ private:
     void handle_parsing_finished_(BuildConfiguration * configuration, RequestFlags succeeded, RequestFlags failed);
     void handle_sub_parsing_finished(BuildConfiguration * configuration, InfoRequestType request, bool success);
     void handle_build_recipes_available_();
+    void handle_parsing_error_();
 
     ProjectExplorer::Target * connected_target_;
     BuildConfiguration * current_build_config_;

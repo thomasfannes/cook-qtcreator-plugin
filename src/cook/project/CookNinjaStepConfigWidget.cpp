@@ -53,7 +53,6 @@ void CookNinjaStepConfigWidget::update_details_()
     if (cook_ninja_step_->get_process_parameters_(param))
     {
         summary_text_ = param.summary(displayName());
-        qDebug() << summary_text_;
     }
     else
         summary_text_ = "<b>Build incorrectly configured</b>";

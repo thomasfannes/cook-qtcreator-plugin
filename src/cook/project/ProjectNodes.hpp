@@ -8,25 +8,29 @@ namespace cook { namespace project {
 
 class Project;
 
+
+
 class CookNode : public ProjectExplorer::ProjectNode
 {
 public:
-    explicit CookNode(Project * project);
-    CookNode(Project * project, const Utils::FileName & dir);
+    enum Type
+    {
+        Type_RecipeNode,
+        Type_BookNode,
+        Type_RootNode
+    };
+
+    explicit CookNode(const info::Recipe & recipe, const Type & type);
 
     virtual bool showInSimpleTree() const override;
-    virtual QString tooltip() const override;
-
-private:
-    Project * project_;
-};
-
-class RecipeNode : public ProjectExplorer::ProjectNode
-{
-public:
-    explicit RecipeNode(const info::Recipe & recipe);
 
     void compress();
+};
+
+class RecipesNode : public ProjectExplorer::ProjectNode
+{
+public:
+    explicit RecipesNode(const Utils::FileName & dir);
 };
 
 class ChaiScriptNode : public ProjectExplorer::FileNode

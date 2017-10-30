@@ -33,6 +33,7 @@ protected:
 
 private:
     bool get_process_parameters_(ProjectExplorer::ProcessParameters & pp);
+    QStringList addition_arguments_lists();
     void ctor_();
     bool clean_ = false;
     QString additional_arguments_;

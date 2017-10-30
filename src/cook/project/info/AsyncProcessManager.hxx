@@ -64,14 +64,11 @@ void AsyncProcessManager<Derived, Process>::on_finished_(bool success)
 {
     QTC_ASSERT(future_.isFinished(), return);
 
-    if (success)
-    {
-        Process * process = future_.result();
-        QTC_ASSERT(process, return);
+    Process * process = future_.result();
+    QTC_ASSERT(process, return);
 
-        static_cast<Derived *>(this)->on_success_(*process);
-        process->deleteLater();
-    }
+    static_cast<Derived *>(this)->on_process_finished_(success, process);
+    process->deleteLater();
 
     emit finished(success);
 }

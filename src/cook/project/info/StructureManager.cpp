@@ -18,15 +18,21 @@ StructureManager::generate_process_starter(const BuildConfiguration & config) co
 
     std::function<bool (StructureProcess &)> func = [=](StructureProcess & process)
     {
-        return process.start_blocking(recipe_file, build_dir);
+        process.start_blocking(recipe_file, build_dir);
+        return true;
     };
 
     return func;
 }
 
-void StructureManager::on_success_(const StructureProcess & process)
+void StructureManager::on_process_finished_(bool success, const StructureProcess * process)
 {
-    recipes_ = process.associated_recipes();
+    QTC_ASSERT(process, return);
+
+    if (success)
+        recipes_ = process->associated_recipes();
+    else
+        recipes_.errors = process->associated_recipes().errors;
 }
 
 
