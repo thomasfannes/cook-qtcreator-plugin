@@ -43,7 +43,7 @@ ProjectExplorer::RunConfiguration * RunConfigurationFactory::clone(ProjectExplor
 
 QString RunConfigurationFactory::displayNameForId(Core::Id id) const
 {
-    return info::display_name(unsafe_to_element_(id));
+    return info::long_display_name(unsafe_to_element_(id));
 }
 
 QList<Core::Id> RunConfigurationFactory::availableCreationIds(ProjectExplorer::Target *parent, CreationMode mode) const

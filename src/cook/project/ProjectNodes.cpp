@@ -6,7 +6,7 @@ namespace cook { namespace project {
 CookNode::CookNode(const info::Recipe & recipe, const Type &type)
     : ProjectExplorer::ProjectNode(recipe.script.parentDir())
 {
-    setDisplayName(info::display_name(recipe));
+    setDisplayName(info::short_display_name(recipe));
 
     switch(type)
     {

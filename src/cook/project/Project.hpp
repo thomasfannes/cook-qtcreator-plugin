@@ -3,6 +3,7 @@
 
 #include "cook/project/InfoManagerType.hpp"
 #include <projectexplorer/project.h>
+#include <projectexplorer/buildconfiguration.h>
 #include <projectexplorer/projectnodes.h>
 #include <cpptools/cppprojectupdater.h>
 
@@ -35,6 +36,7 @@ public slots:
 
 private slots:
     void active_target_changed(ProjectExplorer::Target *target);
+    void active_build_configuration_changed(ProjectExplorer::BuildConfiguration * bc);
 
 protected:
     virtual RestoreResult fromMap(const QVariantMap &map, QString *errorMessage) final;

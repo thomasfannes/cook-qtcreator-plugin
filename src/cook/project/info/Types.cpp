@@ -56,5 +56,45 @@ bool Element::from_id(const Core::Id & id)
     return true;
 }
 
+QString short_display_name(const Recipe & recipe)
+{
+    QString val = recipe.tag;
+
+    if (val.isEmpty())
+    {
+        if (!recipe.name.isEmpty())
+            val = recipe.name;
+        else
+            val = recipe.script.parentDir().toString();
+    }
+    else
+    {
+        if (!recipe.name.isEmpty())
+            val.append(QString(" (%1)").arg(recipe.name));
+    }
+
+    return val;
+}
+
+QString long_display_name(const Element & recipe)
+{
+    QString val = recipe.uri;
+
+    if (val.isEmpty())
+    {
+        if (!recipe.name.isEmpty())
+            val = recipe.name;
+        else
+            val = recipe.script.parentDir().toString();
+    }
+    else
+    {
+        if (!recipe.name.isEmpty())
+            val.append(QString(" (%1)").arg(recipe.name));
+    }
+
+    return val;
+}
+
 
 } } }

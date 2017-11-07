@@ -47,11 +47,12 @@ BuildSettingsWidget::BuildSettingsWidget(BuildConfiguration *bc)
 
     fl->addRow(tr("Targets:"), frame);
 
-    connect(bc,             &BuildConfiguration::recipes_changed, this, &BuildSettingsWidget::targets_changed);
-    connect(bc,             &BuildConfiguration::target_uri_changed,  this, &BuildSettingsWidget::target_changed);
+    connect(bc,             &BuildConfiguration::recipes_changed,       this, &BuildSettingsWidget::targets_changed);
+    connect(bc,             &BuildConfiguration::target_uri_changed,    this, &BuildSettingsWidget::target_changed);
     connect(build_targets_, &QListWidget::itemChanged,                  this, &BuildSettingsWidget::item_changed);
 
     connect(bc, &BuildConfiguration::environmentChanged, this, &BuildSettingsWidget::environmentHasChanged);
+    targets_changed();
 }
 
 void BuildSettingsWidget::targets_changed()

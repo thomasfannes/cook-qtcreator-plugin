@@ -138,11 +138,7 @@ const info::Recipes & BuildConfiguration::recipes_info_() const
 const info::Recipe & BuildConfiguration::root_book() const
 {
     const auto & p = info_mngr_->recipes().latest();
-
-    if (p.root.children.size() != 1)
-        return p.root;
-    else
-        return p.root.children.front();
+    return p.root;
 }
 
 Utils::FileNameList BuildConfiguration::all_script_files() const

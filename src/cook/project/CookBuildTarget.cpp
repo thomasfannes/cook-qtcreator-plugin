@@ -23,14 +23,14 @@ CookBuildTarget::CookBuildTarget()
 CookBuildTarget::CookBuildTarget(const info::Element & element)
     : type(Target_URI),
       uri(element.uri),
-      display_name(info::display_name(element))
+      display_name(info::long_display_name(element))
 {
 }
 
 CookBuildTarget::CookBuildTarget(const info::Recipe & recipe)
     : type(Target_URI),
       uri(recipe.uri),
-      display_name(info::display_name(recipe)),
+      display_name(info::long_display_name(recipe)),
       executable(recipe.build_target)
 {
 }

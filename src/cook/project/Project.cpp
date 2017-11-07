@@ -34,30 +34,32 @@ Project::~Project()
 
 void Project::active_target_changed(ProjectExplorer::Target *target)
 {
-    BuildConfiguration * build_config = target ? static_cast<BuildConfiguration*>(target->activeBuildConfiguration()) : nullptr;
-
     if (connected_target_)
     {
-        disconnect(connected_target_, &ProjectExplorer::Target::activeBuildConfigurationChanged, this, &Project::refresh_all);
+        disconnect(connected_target_, &ProjectExplorer::Target::activeBuildConfigurationChanged, this, &Project::active_build_configuration_changed);
         disconnect(connected_target_, &ProjectExplorer::Target::kitChanged, this, &Project::refresh_all);
     }
 
+    connected_target_ = target;
+
+    if (connected_target_)
+    {
+        connect(connected_target_, &ProjectExplorer::Target::activeBuildConfigurationChanged, this, &Project::active_build_configuration_changed);
+        connect(connected_target_, &ProjectExplorer::Target::kitChanged, this, &Project::refresh_all);
+    }
+
+    active_build_configuration_changed(target->activeBuildConfiguration());
+}
+
+void Project::active_build_configuration_changed(ProjectExplorer::BuildConfiguration * bc)
+{
     if (current_build_config_)
     {
         disconnect(current_build_config_, &BuildConfiguration::recipes_changed, this, &Project::recipes_changed);
         disconnect(current_build_config_, &BuildConfiguration::target_uri_changed, this, &Project::target_uri_changed);
     }
 
-
-
-    connected_target_ = target;
-    current_build_config_ = build_config;
-
-    if (connected_target_)
-    {
-        connect(connected_target_, &ProjectExplorer::Target::activeBuildConfigurationChanged, this, &Project::refresh_all);
-        connect(connected_target_, &ProjectExplorer::Target::kitChanged, this, &Project::refresh_all);
-    }
+    current_build_config_ = qobject_cast<BuildConfiguration *>(bc);
 
     if (current_build_config_)
     {
@@ -80,6 +82,8 @@ void Project::refresh_all()
 
 void Project::refresh_(RequestFlags flags)
 {
+    qDebug() << "Refreshing all recipes" << active_build_configuration();
+
     QTC_ASSERT(active_build_configuration(), return);
     active_build_configuration()->refresh(flags);
 }
