@@ -20,7 +20,7 @@ const Recipes & StructureProcess::associated_recipes() const
 
 bool StructureProcess::start_blocking(const QString & recipe_file, const QString & build_directory, int msecs)
 {
-    QStringList args = { "-g", "recipes.tree", "-f", recipe_file, "-b", build_directory };
+    QStringList args = { "-g", "structure.naft", "-f", recipe_file, "-b", build_directory };
     return start_blocking_(args, msecs);
 }
 
