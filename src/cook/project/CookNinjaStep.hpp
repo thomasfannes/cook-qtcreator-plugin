@@ -19,6 +19,7 @@ public:
     virtual bool init(QList<const BuildStep *> & earlierSteps) override;
     virtual void run(QFutureInterface<bool> & interface) override;
     virtual ProjectExplorer::BuildStepConfigWidget *createConfigWidget() override;
+    virtual QVariantMap toMap() const override;
 
     void set_clean(bool clean) { clean_ = clean; }
     void set_additional_arguments(const QString & arguments);
@@ -30,6 +31,7 @@ signals:
 protected:
     CookNinjaStep(ProjectExplorer::BuildStepList *bsl, CookNinjaStep *bs);
     CookNinjaStep(ProjectExplorer::BuildStepList *bsl, Core::Id id);
+    bool fromMap(const QVariantMap &map) override;
 
 private:
     bool get_process_parameters_(ProjectExplorer::ProcessParameters & pp);

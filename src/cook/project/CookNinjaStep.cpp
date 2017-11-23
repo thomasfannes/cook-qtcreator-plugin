@@ -8,6 +8,13 @@
 
 namespace cook { namespace project {
 
+namespace {
+
+const char ADDITIONAL_ARGUMENTS_KEY[] = "CookProjectManager.Build.Cook.AdditionalArguments";
+const char CLEAN_KEY[] = "CookProjectManager.Build.Cook.Clean";
+
+}
+
 CookNinjaStep::CookNinjaStep(ProjectExplorer::BuildStepList *bsl)
     : ProjectExplorer::AbstractProcessStep(bsl, constants::COOK_BUILD_STEP_ID),
       clean_(false)
@@ -164,6 +171,23 @@ ProjectExplorer::BuildStepConfigWidget * CookNinjaStep::createConfigWidget()
 void CookNinjaStep::ctor_()
 {
     setDisplayName("cook ninja step");
+}
+
+QVariantMap CookNinjaStep::toMap() const
+{
+    QVariantMap map = AbstractProcessStep::toMap();
+
+    map.insert(ADDITIONAL_ARGUMENTS_KEY, additional_arguments_);
+    map.insert(CLEAN_KEY, clean_);
+    return map;
+}
+
+bool CookNinjaStep::fromMap(const QVariantMap &map)
+{
+    additional_arguments_ = map.value(ADDITIONAL_ARGUMENTS_KEY).toString();
+    clean_ = map.value(CLEAN_KEY).toBool();
+
+    return BuildStep::fromMap(map);
 }
 
 void CookNinjaStep::set_additional_arguments(const QString & list)
