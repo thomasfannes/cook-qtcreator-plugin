@@ -16,9 +16,8 @@ const char EXECUTABLE_KEY[]     = "CookProjectManager.CookRunConfiguration.Execu
 
 }
 
-RunConfiguration::RunConfiguration(ProjectExplorer::Target * parent, Core::Id id, const CookBuildTarget & target)
-    : ProjectExplorer::RunConfiguration(parent, id),
-      target_(target)
+RunConfiguration::RunConfiguration(ProjectExplorer::Target * parent)
+    : ProjectExplorer::RunConfiguration(parent)
 {
     addExtraAspect(new ProjectExplorer::LocalEnvironmentAspect(this, ProjectExplorer::LocalEnvironmentAspect::BaseEnvironmentModifier()));
     addExtraAspect(new ProjectExplorer::ArgumentsAspect(this, QStringLiteral("CookProjectManager.CookRunConfiguration.Arguments")));
@@ -27,19 +26,21 @@ RunConfiguration::RunConfiguration(ProjectExplorer::Target * parent, Core::Id id
     auto wd = new ProjectExplorer::WorkingDirectoryAspect(this, QStringLiteral("CookProjectManager.CookRunConfiguration.UserWorkingDirectory"));
     wd->setDefaultWorkingDirectory(parent->project()->projectDirectory());
     addExtraAspect(wd);
-
-    ctor();
 }
 
-RunConfiguration::RunConfiguration(ProjectExplorer::Target *parent, RunConfiguration * source)
-    : ProjectExplorer::RunConfiguration(parent, source),
-      target_(source->target_)
+void RunConfiguration::initialize(Core::Id id, const CookBuildTarget & target)
 {
-    ctor();
+    ProjectExplorer::RunConfiguration::initialize(id);
+    target_ = target;
+    setDefaultDisplayName(default_display_name_());
 }
-
-void RunConfiguration::ctor()
+void RunConfiguration::copyFrom(const ProjectExplorer::RunConfiguration *source)
 {
+    ProjectConfiguration::copyFrom(source);
+    const RunConfiguration * src = qobject_cast<const RunConfiguration *>(source);
+    QTC_ASSERT(!!src, return);
+
+    target_ = src->target();
     setDefaultDisplayName(default_display_name_());
 }
 

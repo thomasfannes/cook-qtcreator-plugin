@@ -292,7 +292,7 @@ const toolset::CookTool * BuildConfiguration::tool() const
     return toolset::KitInformation::cook_tool(target()->kit());
 }
 
-Project * BuildConfiguration::project() const
+Project * BuildConfiguration::project_() const
 {
     return static_cast<Project *>(target()->project());
 }
@@ -303,13 +303,13 @@ void BuildConfiguration::handle_request_started()
     if (request_.is_on_first())
     {
         clear_error_();
-        project()->handle_parsing_started_(this, request_.flags());
+        project_()->handle_parsing_started_(this, request_.flags());
     }
 }
 
 void BuildConfiguration::handle_request_finished(bool success, InfoRequestType type)
 {
-    Project * proj = project();
+    Project * proj = project_();
 
     // toggle the flag
     request_.set(type, success);

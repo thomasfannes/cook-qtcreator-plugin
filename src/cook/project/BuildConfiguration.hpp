@@ -56,7 +56,7 @@ public:
     ProjectExplorer::ProjectNode * generate_linear_project() const;
     void refresh_cpp_code_model(CppTools::CppProjectUpdater * cpp_updater);
 
-    Project * project() const;
+    Project * project_() const;
 
 signals:
     void error_occured(const QString & error);

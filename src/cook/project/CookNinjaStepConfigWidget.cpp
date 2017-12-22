@@ -32,8 +32,8 @@ CookNinjaStepConfigWidget::CookNinjaStepConfigWidget(CookNinjaStep *cook_ninja_s
 
     connect(additional_arguments_, &QLineEdit::textChanged, cook_ninja_step, &CookNinjaStep::set_additional_arguments);
     connect(cook_ninja_step, &CookNinjaStep::additional_arguments_changed,                this, &CookNinjaStepConfigWidget::update_details_);
-    connect(project, &Project::environmentChanged,      this, &CookNinjaStepConfigWidget::update_details_);
-    connect(project, &Project::buildDirectoryChanged,   this, &CookNinjaStepConfigWidget::update_details_);
+    connect(project, &Project::activeProjectConfigurationChanged, this, &CookNinjaStepConfigWidget::update_details_);
+    connect(project, &Project::activeProjectConfigurationChanged, this, &CookNinjaStepConfigWidget::update_details_);
     connect(project, &Project::target_uri_changed,      this, &CookNinjaStepConfigWidget::update_details_);
 }
 

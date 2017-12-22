@@ -30,8 +30,8 @@ NinjaBuildStepConfigWidget::NinjaBuildStepConfigWidget(NinjaBuildStep *ninja_bui
 
     connect(additional_arguments_, &QLineEdit::textChanged, ninja_build_step, &NinjaBuildStep::set_additional_arguments);
     connect(ninja_build_step, &NinjaBuildStep::additional_arguments_changed,                this, &NinjaBuildStepConfigWidget::update_details_);
-    connect(ninja_build_step_->project(), &ProjectExplorer::Project::environmentChanged,    this, &NinjaBuildStepConfigWidget::update_details_);
-    connect(ninja_build_step_->project(), &ProjectExplorer::Project::buildDirectoryChanged, this, &NinjaBuildStepConfigWidget::update_details_);
+    connect(ninja_build_step_->project(), &ProjectExplorer::Project::activeProjectConfigurationChanged,    this, &NinjaBuildStepConfigWidget::update_details_);
+    connect(ninja_build_step_->project(), &ProjectExplorer::Project::activeProjectConfigurationChanged, this, &NinjaBuildStepConfigWidget::update_details_);
 }
 
 QString NinjaBuildStepConfigWidget::displayName() const

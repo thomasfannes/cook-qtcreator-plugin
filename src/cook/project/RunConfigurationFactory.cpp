@@ -37,8 +37,7 @@ ProjectExplorer::RunConfiguration * RunConfigurationFactory::clone(ProjectExplor
     if (!canClone(parent, source))
         return 0;
 
-    RunConfiguration * rc = static_cast<RunConfiguration*>(source);
-    return new RunConfiguration(parent, rc);
+    return ProjectExplorer::IRunConfigurationFactory::cloneHelper<RunConfiguration>(parent, source);
 }
 
 QString RunConfigurationFactory::displayNameForId(Core::Id id) const
@@ -75,7 +74,7 @@ ProjectExplorer::RunConfiguration * RunConfigurationFactory::doCreate(ProjectExp
     if(!recipe)
         return nullptr;
 
-    return new RunConfiguration(parent, recipe->to_id(), CookBuildTarget(*recipe));
+    return ProjectExplorer::IRunConfigurationFactory::createHelper<RunConfiguration>(parent, recipe->to_id(), CookBuildTarget(*recipe));
 }
 
 ProjectExplorer::RunConfiguration * RunConfigurationFactory::doRestore(ProjectExplorer::Target *parent, const QVariantMap &map)
@@ -87,10 +86,8 @@ ProjectExplorer::RunConfiguration * RunConfigurationFactory::doRestore(ProjectEx
         return nullptr;
 
     const info::Recipe * recipe = bc->find_recipe(element.uri);
-    if (recipe)
-        return new RunConfiguration(parent, recipe->to_id(), CookBuildTarget(*recipe));
-    else
-        return new RunConfiguration(parent, element.to_id(), CookBuildTarget(element));
+
+    return ProjectExplorer::IRunConfigurationFactory::createHelper<RunConfiguration>(parent, recipe->to_id(), recipe ? CookBuildTarget(*recipe) : CookBuildTarget(element));
 }
 
 info::Element RunConfigurationFactory::unsafe_to_element_(const Core::Id & id)

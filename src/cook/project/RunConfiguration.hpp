@@ -11,44 +11,28 @@ class RunConfiguration : public ProjectExplorer::RunConfiguration
     Q_OBJECT
 
     friend class RunSettingsWidget;
-    friend class RunConfigurationFactory;
+    friend class ProjectExplorer::IRunConfigurationFactory;
 
 public:
-    RunConfiguration(ProjectExplorer::Target * parent, Core::Id id, const CookBuildTarget & target);
-
     ProjectExplorer::Runnable runnable() const override;
     QWidget *createConfigurationWidget() override;
 
     const CookBuildTarget & target() const { return target_; }
 
-//    void setExecutable(const QString &executable);
-//    void setBaseWorkingDirectory(const Utils::FileName &workingDirectory);
-
     QVariantMap toMap() const override;
 
-//    QString disabledReason() const override;
-
-//    QString buildSystemTarget() const final;
-
-//protected:
-//    RunConfiguration(ProjectExplorer::Target *parent, RunConfiguration *source);
+protected:
     bool fromMap(const QVariantMap &map) override;
 
-//    void updateEnabledState() final;
-
 private:
-    QString default_display_name_() const;
+    RunConfiguration(ProjectExplorer::Target * parent);
 
-    RunConfiguration(ProjectExplorer::Target *parent, RunConfiguration * source);
+    void initialize(Core::Id id, const CookBuildTarget & target);
+    void copyFrom(const ProjectExplorer::RunConfiguration *source);
+    QString default_display_name_() const;
 
     CookBuildTarget target_;
 
-//    QString baseWorkingDirectory() const;
-    void ctor();
-
-//    CookBuildTarget build_system_target_;
-//    QString executable_;
-//    QString title_;
 };
 
 } }

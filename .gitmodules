@@ -1,12 +1,15 @@
 [submodule "gubg.io"]
 	path = gubg.io
 	url = https://github.com/gfannes/gubg.io
+	branch = master
 [submodule "gubg.std"]
 	path = gubg.std
 	url = https://github.com/gfannes/gubg.std
+	branch = master
 [submodule "gubg.extra"]
 	path = gubg.extra
 	url = https://github.com/thomasfannes/gubg.extra
+	branch = master
 [submodule "qt-creator"]
 	path = qt-creator
 	url = https://github.com/qt-creator/qt-creator.git
