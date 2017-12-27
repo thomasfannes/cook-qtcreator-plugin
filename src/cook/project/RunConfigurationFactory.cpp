@@ -87,7 +87,10 @@ ProjectExplorer::RunConfiguration * RunConfigurationFactory::doRestore(ProjectEx
 
     const info::Recipe * recipe = bc->find_recipe(element.uri);
 
-    return ProjectExplorer::IRunConfigurationFactory::createHelper<RunConfiguration>(parent, recipe->to_id(), recipe ? CookBuildTarget(*recipe) : CookBuildTarget(element));
+    if (recipe)
+        return ProjectExplorer::IRunConfigurationFactory::createHelper<RunConfiguration>(parent, recipe->to_id(), CookBuildTarget(*recipe));
+    else
+        return ProjectExplorer::IRunConfigurationFactory::createHelper<RunConfiguration>(parent, element.to_id(), CookBuildTarget(element));
 }
 
 info::Element RunConfigurationFactory::unsafe_to_element_(const Core::Id & id)

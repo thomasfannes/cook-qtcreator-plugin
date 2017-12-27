@@ -95,13 +95,17 @@ void Project::handle_parsing_started_(BuildConfiguration * configuration, Reques
     auto * t = activeTarget();
     if(!t || t->activeBuildConfiguration() != configuration)
         return;
+
+    emitParsingStarted();
 }
 
-void Project::handle_parsing_finished_(BuildConfiguration * configuration, RequestFlags /*succeeded*/, RequestFlags /*failed*/)
+void Project::handle_parsing_finished_(BuildConfiguration * configuration, RequestFlags succeeded, RequestFlags failed)
 {
     auto * t = activeTarget();
     if(!t || t->activeBuildConfiguration() != configuration)
         return;
+
+    emitParsingFinished(failed == RequestFlags());
 }
 
 void Project::handle_sub_parsing_finished(BuildConfiguration * configuration, InfoRequestType request, bool success)
