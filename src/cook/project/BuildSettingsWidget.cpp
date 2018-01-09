@@ -96,7 +96,7 @@ void BuildSettingsWidget::target_changed()
 
 void BuildSettingsWidget::item_changed(QListWidgetItem * item)
 {
-    const CookBuildTarget tgt = (item->checkState() == Qt::Checked ? item->data(Qt::UserRole).value<CookBuildTarget>() : CookBuildTarget::default_target());
+    const CookBuildTarget tgt = (item->checkState() == Qt::Checked ? item->data(Qt::UserRole).value<CookBuildTarget>() : CookBuildTarget::current_executable());
     bc_->set_build_target(tgt);
 }
 

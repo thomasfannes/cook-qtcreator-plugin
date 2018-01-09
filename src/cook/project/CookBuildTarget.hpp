@@ -22,7 +22,6 @@ struct CookBuildTarget
     explicit CookBuildTarget(const info::Element & element);
     explicit CookBuildTarget(const info::Recipe & recipe);
 
-    static CookBuildTarget default_target();
     static CookBuildTarget current_executable();
 
     bool operator==(const CookBuildTarget & rhs) const;

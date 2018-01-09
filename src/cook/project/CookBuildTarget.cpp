@@ -35,12 +35,6 @@ CookBuildTarget::CookBuildTarget(const info::Recipe & recipe)
 {
 }
 
-CookBuildTarget CookBuildTarget::default_target()
-{
-    static CookBuildTarget tgt_default = generate_default_target(Target_Default, "default");
-    return tgt_default;
-}
-
 CookBuildTarget CookBuildTarget::current_executable()
 {
     static CookBuildTarget tgt_current = generate_default_target(Target_CurrentExecutable, "current");

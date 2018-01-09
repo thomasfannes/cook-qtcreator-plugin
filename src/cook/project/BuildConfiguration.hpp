@@ -37,8 +37,6 @@ public:
     Utils::FileName project_file() const;
     Utils::FileNameList all_script_files() const;
 
-
-    QString default_uri() const;
     const info::Recipe * find_recipe(const QString & uri) const;
     const info::Recipe & root_book() const;
     QList<CookBuildTarget> all_build_targets() const;

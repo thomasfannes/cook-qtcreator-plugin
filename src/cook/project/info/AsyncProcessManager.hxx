@@ -62,6 +62,7 @@ bool AsyncProcessManager<Derived, Process>::start_async()
 template <typename Derived, typename Process>
 void AsyncProcessManager<Derived, Process>::on_finished_(bool success)
 {
+    future_.waitForFinished();
     QTC_ASSERT(future_.isFinished(), return);
 
     Process * process = future_.result();

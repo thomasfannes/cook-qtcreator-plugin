@@ -90,6 +90,8 @@ void Project::refresh_(RequestFlags flags)
 
 void Project::handle_parsing_started_(BuildConfiguration * configuration, RequestFlags /*flags*/)
 {
+    qDebug() << "Parsing started";
+
     ProjectExplorer::TaskHub::clearTasks();
 
     auto * t = activeTarget();
@@ -101,6 +103,8 @@ void Project::handle_parsing_started_(BuildConfiguration * configuration, Reques
 
 void Project::handle_parsing_finished_(BuildConfiguration * configuration, RequestFlags succeeded, RequestFlags failed)
 {
+    qDebug() << "Parsing finished";
+
     auto * t = activeTarget();
     if(!t || t->activeBuildConfiguration() != configuration)
         return;
@@ -192,10 +196,6 @@ void Project::handle_build_recipes_available_()
     setRootProjectNode(root);
     bc->refresh_cpp_code_model(cpp_code_model_updater_);
     setDisplayName(rootProjectNode()->displayName());
-
-    const QString & main_uri = bc->default_uri();
-    const info::Recipe * active_recipe = bc->find_recipe(main_uri);
-    QTC_ASSERT(active_recipe, return);
 
     // add watcher for all the script filenames
     {

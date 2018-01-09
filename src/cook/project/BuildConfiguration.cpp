@@ -60,7 +60,7 @@ void visit_tree(const info::Recipe & root, Functor && f)
 BuildConfiguration::BuildConfiguration(ProjectExplorer::Target * parent, const BuildType &build_type)
     : ProjectExplorer::BuildConfiguration(parent, constants::COOK_BUILDCONFIG_ID),
       type_(build_type),
-      target_(CookBuildTarget::default_target()),
+      target_(CookBuildTarget::current_executable()),
       info_mngr_(new InfoManager(this))
 {
     ctor();
@@ -69,7 +69,7 @@ BuildConfiguration::BuildConfiguration(ProjectExplorer::Target * parent, const B
 BuildConfiguration::BuildConfiguration(ProjectExplorer::Target *parent, BuildConfiguration * source)
     : ProjectExplorer::BuildConfiguration(parent, source),
       type_(source->type_),
-      target_(CookBuildTarget::default_target()),
+      target_(CookBuildTarget::current_executable()),
       info_mngr_(new InfoManager(this))
 {
     cloneSteps(source);
@@ -158,11 +158,6 @@ Utils::FileNameList BuildConfiguration::all_script_files() const
 QList<info::Error> BuildConfiguration::all_parse_errors() const
 {
     return recipes_info_().errors;
-}
-
-QString BuildConfiguration::default_uri() const
-{
-    return recipes_info_().default_uri;
 }
 
 bool BuildConfiguration::refresh(QFlags<InfoRequestType> flags)
@@ -467,7 +462,6 @@ BuildConfiguration::BuildType BuildConfiguration::buildType() const
 QList<CookBuildTarget> BuildConfiguration::special_targets_() const
 {
     QList<CookBuildTarget> tgts;
-    tgts << CookBuildTarget::default_target();
     tgts << CookBuildTarget::current_executable();
 
     return tgts;
