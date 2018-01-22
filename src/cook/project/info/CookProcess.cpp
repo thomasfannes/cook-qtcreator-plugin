@@ -27,6 +27,7 @@ bool CookProcess::start_blocking_(const QStringList & arguments, int msecs)
 
     // set and run
     setProgram(tool_->exec_file().absoluteFilePath());
+
     setArguments(arguments);
     start();
 

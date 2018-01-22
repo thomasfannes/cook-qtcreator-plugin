@@ -59,6 +59,7 @@ struct Recipe : public Element
     QSet<Utils::FileName> all_scripts;
     QVector<FileInfo> files;
     QStringList include_paths;
+    QMap<QString, QString> defines;
 
     void clear()
     {

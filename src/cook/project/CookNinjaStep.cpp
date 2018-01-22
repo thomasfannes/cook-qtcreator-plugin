@@ -51,8 +51,6 @@ bool CookNinjaStep::get_process_parameters_(ProjectExplorer::ProcessParameters &
         return false;
     }
 
-
-
     // get the tool
     const toolset::CookTool * tool = bc->tool();
     if (!tool || !tool->is_valid())
@@ -62,9 +60,8 @@ bool CookNinjaStep::get_process_parameters_(ProjectExplorer::ProcessParameters &
         return false;
     }
 
-
     pp.setMacroExpander(bc->macroExpander());
-    pp.setWorkingDirectory(bc->buildDirectory().toString());
+    pp.setWorkingDirectory(project()->projectDirectory().toString());
     Utils::Environment env = bc->environment();
     Utils::Environment::setupEnglishOutput(&env);
     pp.setEnvironment(env);
@@ -129,10 +126,9 @@ bool CookNinjaStep::init(QList<const BuildStep *> & earlierSteps)
         }
     }
 
-
     ProjectExplorer::ProcessParameters *pp = processParameters();
     pp->setMacroExpander(bc->macroExpander());
-    pp->setWorkingDirectory(bc->buildDirectory().toString());
+    pp->setWorkingDirectory(project()->projectDirectory().toString());
     Utils::Environment env = bc->environment();
     Utils::Environment::setupEnglishOutput(&env);
     pp->setEnvironment(env);
@@ -144,8 +140,6 @@ bool CookNinjaStep::init(QList<const BuildStep *> & earlierSteps)
     }
 
     pp->resolveAll();
-
-
 
     return ProjectExplorer::AbstractProcessStep::init(earlierSteps);
 }

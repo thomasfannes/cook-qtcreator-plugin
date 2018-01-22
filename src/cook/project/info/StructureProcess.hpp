@@ -15,7 +15,7 @@ class StructureProcess : public CookProcess
 public:
     explicit StructureProcess(const toolset::CookTool * tool, QObject *parent = nullptr);
 
-    bool start_blocking(const QString &recipe_file, const QString &build_directory, int msecs = 3000);
+    bool start_blocking(const QString &recipe_file, const QString & working_directory, const QString &build_directory, int msecs = 3000);
     const Recipes & associated_recipes() const;
 
 private:

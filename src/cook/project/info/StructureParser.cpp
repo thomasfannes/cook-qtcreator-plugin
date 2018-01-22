@@ -17,6 +17,7 @@ TAG(error);
 TAG(script);
 TAG(include_path);
 TAG(default);
+TAG(define);
 #undef TAG
 
 #define KEY(TYPE) const static char * key_##TYPE = #TYPE
@@ -30,6 +31,8 @@ KEY(path);
 KEY(line);
 KEY(column);
 KEY(error);
+KEY(name);
+KEY(value);
 #undef KEY
 
 TargetType convert_target_type(const std::string & v)
@@ -54,6 +57,8 @@ FileType convert_file_type(const std::string & v)
         return FileType::Unknown;
 }
 
+using Define = std::pair<QString, QString>;
+
 Utils::FileName convert_file_name(const std::string & v)
 {
     return Utils::FileName::fromString(QString::fromStdString(v));
@@ -68,6 +73,17 @@ int to_int(const std::string & v)
 {
     return std::atoi(v.c_str());
 }
+
+using DefineParser = gubg::parse::polymorphic_tree::TypedParser<Define>;
+std::shared_ptr<DefineParser> define_parser()
+{
+    auto p = std::make_shared<DefineParser>();
+    p->single_attr(key_name, &Define::first, to_string)->set_required();
+    p->single_attr(key_value, &Define::second, to_string);
+
+    return p;
+}
+
 
 
 using FileInfoParser = gubg::parse::polymorphic_tree::TypedParser<FileInfo>;
@@ -111,6 +127,11 @@ std::shared_ptr<RecipeParser> recipe_parser()
     {
         auto inserter = [](Recipe & recipe, auto first, auto last) { for(; first != last; ++first) recipe.include_paths.append(*first); };
         p->multi_child<QString>(tag_include_path, inserter, include_path_parser);
+    }
+
+    {
+        auto inserter = [](Recipe & recipe, auto first, auto last) { for(; first != last; ++first) recipe.defines.insert(first->first, first->second); };
+        p->multi_child<Define>(tag_define, inserter, define_parser);
     }
 
     p->set_allocator([]() { return Recipe(true); });

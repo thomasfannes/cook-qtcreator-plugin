@@ -106,7 +106,7 @@ QStringList BuildConfiguration::ninja_build_args(const QStringList & additional_
 
     args << "-g" << "build.ninja";
     args << "-f" << project_file().toString();
-    args << "-b" << buildDirectory().toString();
+    args << "-o" << buildDirectory().toString();
 
 
     switch(buildType())
@@ -266,12 +266,25 @@ void BuildConfiguration::refresh_cpp_code_model(CppTools::CppProjectUpdater * cp
         rpp.setProjectFileLocation(recipe.script.toString());
         rpp.setIncludePaths(recipe.include_paths);
 
-        QStringList files;
-        for(const info::FileInfo & f :recipe.files)
-            if(f.type == info::FileType::Header || f.type == info::FileType::Source)
-                files.append(f.file.toString());
+        {
+            QStringList files;
+            for(const info::FileInfo & f :recipe.files)
+                if(f.type == info::FileType::Header || f.type == info::FileType::Source)
+                    files.append(f.file.toString());
+            rpp.setFiles(files);
+        }
 
-        rpp.setFiles(files);
+        {
+            ProjectExplorer::Macros macros;
+            for(auto it = recipe.defines.begin(); it != recipe.defines.end(); ++it)
+                if (it.value().isNull())
+                    macros.append(ProjectExplorer::Macro(it.key().toLatin1()));
+                else
+                    macros.append(ProjectExplorer::Macro(it.key().toLatin1(), it.value().toLatin1()));
+
+            rpp.setMacros(macros);
+        }
+
 
         rpps.append(rpp);
 
@@ -345,8 +358,8 @@ void BuildConfiguration::ctor()
 
     connect(info_mngr_, &InfoManager::started,
             [](const QString & command) {
-                Core::MessageManager::write(QString("Executing %1").arg(command));
-            }
+        Core::MessageManager::write(QString("Executing %1").arg(command));
+    }
     );
 
     connect(info_mngr_, &InfoManager::process_output, [](const QString & output) { Core::MessageManager::write(output); });
@@ -408,15 +421,8 @@ void BuildConfiguration::start_refresh_(InfoRequestType type)
     switch(type)
     {
         case InfoRequestType::Recipes:
-        {
             start_async_process(info_mngr_->recipes(), "Cook.scan.recipes");
-
-
-
-
-
             break;
-        }
 
         default:
             bool unknown_info_request_type = false;

@@ -18,9 +18,10 @@ const Recipes & StructureProcess::associated_recipes() const
     return parser_->data();
 }
 
-bool StructureProcess::start_blocking(const QString & recipe_file, const QString & build_directory, int msecs)
+bool StructureProcess::start_blocking(const QString & recipe_file, const QString & working_directory, const QString & build_directory, int msecs)
 {
-    QStringList args = { "-g", "structure.naft", "-f", recipe_file, "-b", build_directory };
+    QStringList args = { "-g", "structure.naft", "-f", recipe_file, "-o", build_directory };
+    setWorkingDirectory(working_directory);
     return start_blocking_(args, msecs);
 }
 

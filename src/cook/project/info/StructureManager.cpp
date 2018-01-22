@@ -15,10 +15,11 @@ StructureManager::generate_process_starter(const BuildConfiguration & config) co
 {
     QString recipe_file = config.project_file().toString();
     QString build_dir = config.buildDirectory().toString();
+    QString project_dir = config.project()->projectDirectory().toString();
 
     std::function<bool (StructureProcess &)> func = [=](StructureProcess & process)
     {
-        process.start_blocking(recipe_file, build_dir);
+        process.start_blocking(recipe_file, project_dir, build_dir);
         return true;
     };
 

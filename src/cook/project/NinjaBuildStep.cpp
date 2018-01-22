@@ -179,8 +179,8 @@ QString NinjaBuildStep::process_arguments_() const
 {
     QString arguments;
 
-    Utils::QtcProcess::addArg(&arguments, "-f");
-    Utils::QtcProcess::addArg(&arguments, ninja_build_file().toString());
+    Utils::QtcProcess::addArg(&arguments, "-C");
+    Utils::QtcProcess::addArg(&arguments, ninja_build_file().parentDir().toString());
 
     Utils::QtcProcess::addArgs(&arguments, additional_arguments());
     Utils::QtcProcess::addArgs(&arguments, build_targets_);
