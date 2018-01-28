@@ -49,9 +49,9 @@ TargetType convert_target_type(const std::string & v)
 FileType convert_file_type(const std::string & v)
 {
     if (false) {}
-    else if(v == "source")
+    else if(v == "source" || v == "1")
         return FileType::Source;
-    else if(v == "header")
+    else if(v == "header" || v == "2")
         return FileType::Header;
     else
         return FileType::Unknown;
@@ -114,7 +114,8 @@ std::shared_ptr<RecipeParser> recipe_parser()
 
     p->single_attr(key_uri, &Recipe::uri, to_string)->set_required();
     p->single_attr(key_display_name, &Recipe::name, to_string);
-    p->single_attr(key_script, &Recipe::script, convert_file_name)->set_required();
+    p->single_attr(key_script, &Recipe::script, convert_file_name);
+    p->single_attr(key_path, &Recipe::path, convert_file_name);
     p->single_attr(key_type, &Recipe::type, convert_target_type)->set_required();
     p->single_attr(key_build_target, &Recipe::build_target, convert_file_name)->set_required();
     p->single_attr(key_tag, &Recipe::tag, to_string)->set_required();
@@ -202,6 +203,8 @@ using CurRecipesParser = gubg::parse::polymorphic_tree::TypedParser<Recipes>;
 std::shared_ptr<CurRecipesParser> recipes_parser()
 {
     auto p = std::make_shared<CurRecipesParser>();
+
+    p->single_attr<Utils::FileName>(key_path, &Recipes::path, convert_file_name);
 
     p->single_child<Recipe>(tag_book, &Recipes::root, book_parser);
     p->single_child<QString>(tag_default, &Recipes::default_uri, default_uri_parser);

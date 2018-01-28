@@ -65,7 +65,7 @@ QString short_display_name(const Recipe & recipe)
         if (!recipe.name.isEmpty())
             val = recipe.name;
         else
-            val = recipe.script.parentDir().toString();
+            val = recipe.path.toString();
     }
     else
     {
@@ -85,7 +85,7 @@ QString long_display_name(const Element & recipe)
         if (!recipe.name.isEmpty())
             val = recipe.name;
         else
-            val = recipe.script.parentDir().toString();
+            val = recipe.path.toString();
     }
     else
     {

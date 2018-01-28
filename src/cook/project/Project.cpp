@@ -82,16 +82,12 @@ void Project::refresh_all()
 
 void Project::refresh_(RequestFlags flags)
 {
-    qDebug() << "Refreshing all recipes" << active_build_configuration();
-
     QTC_ASSERT(active_build_configuration(), return);
     active_build_configuration()->refresh(flags);
 }
 
 void Project::handle_parsing_started_(BuildConfiguration * configuration, RequestFlags /*flags*/)
 {
-    qDebug() << "Parsing started";
-
     ProjectExplorer::TaskHub::clearTasks();
 
     auto * t = activeTarget();
@@ -103,8 +99,6 @@ void Project::handle_parsing_started_(BuildConfiguration * configuration, Reques
 
 void Project::handle_parsing_finished_(BuildConfiguration * configuration, RequestFlags succeeded, RequestFlags failed)
 {
-    qDebug() << "Parsing finished";
-
     auto * t = activeTarget();
     if(!t || t->activeBuildConfiguration() != configuration)
         return;

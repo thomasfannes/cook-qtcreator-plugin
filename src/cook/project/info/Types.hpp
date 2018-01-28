@@ -37,6 +37,7 @@ struct Element
     QString uri;
     QString name;
     Utils::FileName script;
+    Utils::FileName path;
 
     Core::Id to_id() const;
     bool from_id(const Core::Id & id);
@@ -86,6 +87,7 @@ struct Recipes
     Recipe root;
     QString default_uri;
     QList<Error> errors;
+    Utils::FileName path;
 
     void clear()
     {

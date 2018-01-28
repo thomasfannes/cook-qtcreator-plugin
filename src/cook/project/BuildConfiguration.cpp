@@ -229,7 +229,6 @@ ProjectExplorer::ProjectNode * BuildConfiguration::generate_linear_project() con
             todo.push(std::make_pair(&p, rn));
     }
 
-
     {
         RecipesNode * recipes_folder = new RecipesNode(project()->projectDirectory());
 
@@ -263,7 +262,7 @@ void BuildConfiguration::refresh_cpp_code_model(CppTools::CppProjectUpdater * cp
 
         CppTools::RawProjectPart rpp;
         rpp.setDisplayName(recipe.uri);
-        rpp.setProjectFileLocation(recipe.script.toString());
+        rpp.setProjectFileLocation(recipe.path.toString());
         rpp.setIncludePaths(recipe.include_paths);
 
         {
